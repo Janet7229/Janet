@@ -102,18 +102,17 @@
     </div>
 
     <div id="zones"></div>
-
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script>
-    (function () {
+    <!-- Main App Script with Modern Firebase SDK -->
+    <script type="module">
+      // --- FIREBASE V9 MODULAR SDK IMPORTS ---
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+      import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
       // --- FIREBASE SETUP ---
-      // This configuration object MUST include the databaseURL.
       const firebaseConfig = {
         apiKey: "AIzaSyD_5YgdpDfpa0dJtcfkUii_UjCKO9oF4J0",
         authDomain: "shamankingdata.firebaseapp.com",
@@ -125,8 +124,8 @@
       };
       
       // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-      const database = firebase.database();
+      const app = initializeApp(firebaseConfig);
+      const database = getDatabase(app);
     
       // --- DOM ELEMENTS ---
       const zonesRoot = document.getElementById('zones');
@@ -143,16 +142,18 @@
       }
       const debouncedSave = debounce(saveStateToFirebase, 800);
     
-      // --- FIREBASE DATA HANDLING ---
+      // --- FIREBASE DATA HANDLING (V9 SYNTAX) ---
       function saveStateToFirebase() {
         const state = getCurrentStateFromDOM();
-        database.ref('appData').set(state)
+        const dataRef = ref(database, 'appData');
+        set(dataRef, state)
           .then(() => console.log("State saved successfully!"))
           .catch(err => console.error("Error saving state: ", err));
       }
     
       function loadStateFromFirebase() {
-        database.ref('appData').once('value', (snapshot) => {
+        const dataRef = ref(database, 'appData');
+        get(dataRef).then((snapshot) => {
           if (snapshot.exists()) {
             const state = snapshot.val();
             console.log("State loaded successfully!");
@@ -161,6 +162,10 @@
             console.log("No data found. Rendering initial containers.");
             renderInitialContainers(3);
           }
+        }).catch((err) => {
+            console.error("Error loading data from Firebase:", err);
+            // Fallback to a default state if Firebase read fails
+            renderInitialContainers(3);
         });
       }
     
@@ -196,7 +201,7 @@
     
       function renderState(state) {
         zonesRoot.innerHTML = '';
-        if (state.containers && state.containers.length > 0) {
+        if (state && state.containers && state.containers.length > 0) {
             state.containers.forEach(containerData => {
               const zone = createZone(null, containerData.title);
               zonesRoot.appendChild(zone);
@@ -237,7 +242,7 @@
         }
       });
     
-      // --- MODIFIED CREATION FUNCTIONS ---
+      // --- CREATION FUNCTIONS ---
       function createZone(index, titleText) {
         if (!titleText) {
             titleText = `Container #${index}`;
@@ -525,7 +530,7 @@
         let lastNonEmptyCol = -1;
         for (let c = colCount - 1; c >= 0; c--) {
             for (let r = 0; r < normalRows.length; r++) {
-                if (!isNaN(parseFloat(normalRows[r].cells[c].textContent))) {
+                if (normalRows[r].cells[c] && !isNaN(parseFloat(normalRows[r].cells[c].textContent))) {
                     lastNonEmptyCol = c;
                     break;
                 }
@@ -540,7 +545,7 @@
         for (let c = 0; c <= lastNonEmptyCol; c++) {
           let hasNumber = false;
           for (let r = 0; r < normalRows.length; r++) {
-            if (!isNaN(parseFloat(normalRows[r].cells[c].textContent))) { hasNumber = true; break; }
+            if (normalRows[r].cells[c] && !isNaN(parseFloat(normalRows[r].cells[c].textContent))) { hasNumber = true; break; }
           }
           if (hasNumber) {
               validCols.push(c);
@@ -553,7 +558,9 @@
         const datasets = [];
         normalRows.forEach((row, rIdx) => {
           const dataPoints = validCols.map(c => {
-            const v = parseFloat(row.cells[c].textContent);
+            const cell = row.cells[c];
+            if (!cell) return null;
+            const v = parseFloat(cell.textContent);
             return isNaN(v) ? null : v;
           });
 
@@ -611,7 +618,6 @@
       // --- INITIALIZE APP ---
       loadStateFromFirebase();
     
-    })();
     </script>
 
 </body>
