@@ -158,7 +158,7 @@
             timeout = setTimeout(() => func.apply(this, args), delay);
           };
         }
-        const debouncedSave = debounce(saveStateToFirebase, 800);
+        const debouncedSave = debounce(saveStateToFirebase, 101);
       
         // --- FIREBASE DATA HANDLING (V9 SYNTAX) ---
         function saveStateToFirebase() {
