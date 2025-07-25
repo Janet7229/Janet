@@ -222,11 +222,16 @@
       
               return {
                 title: dropdownTitle,
+                isOpen: sectionEl.hasAttribute('open'), // Save dropdown open state
                 jairaTable: getTableData(jairaTableEl),
                 kairaTable: getTableData(kairaTableEl),
               };
             });
-            return { title: containerTitle, dropdowns };
+            return {
+                title: containerTitle,
+                isOpen: zoneEl.hasAttribute('open'), // Save container open state
+                dropdowns
+            };
           });
           return { containers };
         }
@@ -235,7 +240,7 @@
           zonesRoot.innerHTML = '';
           if (state && state.containers && state.containers.length > 0) {
               state.containers.forEach(containerData => {
-                const zone = createZone(null, containerData.title);
+                const zone = createZone(null, containerData.title, containerData.isOpen);
                 zonesRoot.appendChild(zone);
                 const content = zone.querySelector('.zone-content');
                 containerData.dropdowns?.forEach(dropdownData => {
@@ -275,12 +280,15 @@
         });
       
         // --- CREATION FUNCTIONS ---
-        function createZone(index, titleText) {
+        function createZone(index, titleText, isOpen = false) {
           if (!titleText) {
               titleText = `Container #${index}`;
           }
           const zone = document.createElement('div');
           zone.className = 'zone';
+          if (isOpen) {
+              zone.setAttribute('open', '');
+          }
       
           const header = document.createElement('div');
           header.className = 'zone-header';
@@ -321,6 +329,7 @@
           header.addEventListener('click', (e) => {
             if (e.target.isContentEditable) return;
             zone.toggleAttribute('open');
+            debouncedSave(); // Save state on toggle
           });
       
           zone.appendChild(header);
@@ -348,8 +357,14 @@
         function createSection(caption, data = null) {
           const section = document.createElement('div');
           section.className = 'section';
+          if (data && data.isOpen) {
+              section.setAttribute('open', '');
+          }
+
           const header = document.createElement('button');
           header.className = 'header';
+          header.setAttribute('aria-expanded', data?.isOpen || 'false');
+
           const plus = document.createElement('span');
           plus.className = 'plus';
           plus.textContent = '+';
@@ -388,6 +403,8 @@
           header.addEventListener('click', (e) => {
             if (e.target.isContentEditable) return;
             section.toggleAttribute('open');
+            header.setAttribute('aria-expanded', section.hasAttribute('open'));
+            debouncedSave(); // Save state on toggle
           });
           section.appendChild(header);
           section.appendChild(content);
