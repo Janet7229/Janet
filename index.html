@@ -1,615 +1,617 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Dynamic Containers</title>
-<style>
-  body{
-    font-family:"Calibri","Helvetica Neue",Arial,sans-serif;
-    max-width:900px;margin:2rem auto;background:#fff8f0;color:#333;
-  }
-  h1{
-    text-align:center;font-size:2rem;margin-bottom:1rem;color:#ff6f61;
-  }
-
-  /* Container controls */
-  .container-controls{
-    display:flex;justify-content:center;gap:10px;margin-bottom:15px;
-  }
-  .control-btn{
-    padding:6px 12px;border:none;border-radius:6px;font-size:18px;color:#fff;
-    cursor:pointer;transition:.2s;width:40px;height:40px;text-align:center;
-  }
-  .control-btn.add{background:#a5d6a7;}
-  .control-btn.remove{background:#ef9a9a;}
-  .control-btn:hover{transform:scale(1.05);}
-
-  /* Zones (Containers) */
-  .zone{
-    border:2px solid #ffb347;border-radius:10px;margin-bottom:15px;overflow:hidden;
-    box-shadow:0 2px 6px rgba(0,0,0,.1);background:#fff4e6;
-  }
-  .zone-header{
-    display:flex;align-items:center;gap:8px;padding:12px 14px;background:#ffe0b2;
-    cursor:pointer;font-weight:bold;font-size:1.1rem;
-  }
-  .zone .plus{
-    width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;
-    border:1px solid #ff9800;border-radius:4px;font-weight:bold;background:#ffcc80;color:#333;
-    transition:transform .15s;
-  }
-  .zone[open] .zone-header .plus{transform:rotate(45deg);}
-  .zone-content{display:none;padding:12px 14px 16px;background:#fffef8;}
-  .zone[open] .zone-content{display:block;}
-
-  /* Buttons inside sections/tables */
-  .mini-btn,.add-btn,.graph-btn{
-    padding:6px 10px;font-size:13px;cursor:pointer;border:none;border-radius:6px;
-    transition:transform .1s,background .2s;color:#fff;
-  }
-  .add-btn{background:#f48fb1;width:40px;height:40px;font-size:18px;}
-  .mini-btn.add-col{background:#80cbc4;} /* + Column */
-  .mini-btn.add-row{background:#90caf9;} /* + Row */
-  .mini-btn.del-col{background:#f48fb1;} /* - Column */
-  .mini-btn.del-row{background:#ffcc80;} /* - Row */
-  .graph-btn{background:#b39ddb;width:auto;height:auto;padding:6px 10px;font-size:13px;}
-  .mini-btn:hover,.add-btn:hover,.graph-btn:hover{transform:scale(1.05);}
-
-  .dropdown-controls,.table-toolbar{
-    display:flex;gap:.5rem;margin:8px 0;flex-wrap:wrap;
-  }
-
-  /* Sections (dropdowns inside containers) */
-  .section{
-    border:1px solid #ddd;border-radius:6px;margin-bottom:10px;overflow:hidden;
-  }
-  .header{
-    display:flex;align-items:center;gap:8px;padding:12px 14px;background:#ffe0b2;
-    cursor:pointer;border:none;font-weight:bold;width:100%;
-  }
-  .header .plus{
-    width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;
-    border:1px solid #ff9800;border-radius:4px;background:#ffcc80;font-weight:bold;
-  }
-  .content{padding:10px 14px 14px;display:none;}
-  .section[open] .content{display:block;}
-
-  /* Table titles */
-  .table-title{
-    font-size:1rem;font-weight:bold;margin:8px 0 4px;text-align:center;color:#4a148c;
-  }
-
-  /* Scroll container for tables */
-  .table-container{
-    overflow-x:auto;border:2px solid #ccc;border-radius:5px;margin-top:5px;
-  }
-
-  /* Tables */
-  table{
-    border-collapse:collapse;width:100%;
-  }
-  table.wide{min-width:1000px;} /* force horizontal scroll if >10 cols */
-  table,th,td{border:3px solid #000;}
-  th,td{padding:6px;text-align:center;font-size:14px;}
-  td[contenteditable="true"]{cursor:text;}
-  .table-top td,.table-top th{background:#ffd6e7;}     /* light pink */
-  .table-bottom td,.table-bottom th{background:#e6d6ff;}/* light purple */
-
-  /* Red date row */
-  .date-row td{
-    background:#ffcccc!important;cursor:pointer;user-select:none;font-size:7px;
-  }
-
-  .graph-wrap{
-    margin-top:8px;padding:8px;background:#fff;border:2px dashed #b39ddb;border-radius:8px;
-    display:none;
-  }
-
-  .editing{
-    outline:2px dashed #ff6f61;background:#fff5ee;
-  }
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dynamic Containers with Firebase</title>
+    <style>
+      body{
+        font-family:"Calibri","Helvetica Neue",Arial,sans-serif;
+        max-width:900px;margin:2rem auto;background:#fff8f0;color:#333;
+      }
+      h1{
+        text-align:center;font-size:2rem;margin-bottom:1rem;color:#ff6f61;
+      }
+      .container-controls{
+        display:flex;justify-content:center;gap:10px;margin-bottom:15px;
+      }
+      .control-btn{
+        padding:6px 12px;border:none;border-radius:6px;font-size:18px;color:#fff;
+        cursor:pointer;transition:.2s;width:40px;height:40px;text-align:center;
+      }
+      .control-btn.add{background:#a5d6a7;}
+      .control-btn.remove{background:#ef9a9a;}
+      .control-btn:hover{transform:scale(1.05);}
+      .zone{
+        border:2px solid #ffb347;border-radius:10px;margin-bottom:15px;overflow:hidden;
+        box-shadow:0 2px 6px rgba(0,0,0,.1);background:#fff4e6;
+      }
+      .zone-header{
+        display:flex;align-items:center;gap:8px;padding:12px 14px;background:#ffe0b2;
+        cursor:pointer;font-weight:bold;font-size:1.1rem;
+      }
+      .zone .plus{
+        width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;
+        border:1px solid #ff9800;border-radius:4px;font-weight:bold;background:#ffcc80;color:#333;
+        transition:transform .15s;
+      }
+      .zone[open] .zone-header .plus{transform:rotate(45deg);}
+      .zone-content{display:none;padding:12px 14px 16px;background:#fffef8;}
+      .zone[open] .zone-content{display:block;}
+      .mini-btn,.add-btn,.graph-btn{
+        padding:6px 10px;font-size:13px;cursor:pointer;border:none;border-radius:6px;
+        transition:transform .1s,background .2s;color:#fff;
+      }
+      .add-btn{background:#f48fb1;width:40px;height:40px;font-size:18px;}
+      .mini-btn.add-col{background:#80cbc4;} /* + Column */
+      .mini-btn.add-row{background:#90caf9;} /* + Row */
+      .mini-btn.del-col{background:#f48fb1;} /* - Column */
+      .mini-btn.del-row{background:#ffcc80;} /* - Row */
+      .graph-btn{background:#b39ddb;width:auto;height:auto;padding:6px 10px;font-size:13px;}
+      .mini-btn:hover,.add-btn:hover,.graph-btn:hover{transform:scale(1.05);}
+      .dropdown-controls,.table-toolbar{
+        display:flex;gap:.5rem;margin:8px 0;flex-wrap:wrap;
+      }
+      .section{
+        border:1px solid #ddd;border-radius:6px;margin-bottom:10px;overflow:hidden;
+      }
+      .header{
+        display:flex;align-items:center;gap:8px;padding:12px 14px;background:#ffe0b2;
+        cursor:pointer;border:none;font-weight:bold;width:100%;
+      }
+      .header .plus{
+        width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;
+        border:1px solid #ff9800;border-radius:4px;background:#ffcc80;font-weight:bold;
+      }
+      .content{padding:10px 14px 14px;display:none;}
+      .section[open] .content{display:block;}
+      .table-title{
+        font-size:1rem;font-weight:bold;margin:8px 0 4px;text-align:center;color:#4a148c;
+      }
+      .table-container{
+        overflow-x:auto;border:2px solid #ccc;border-radius:5px;margin-top:5px;
+      }
+      table{
+        border-collapse:collapse;width:100%;
+      }
+      table.wide{min-width:1000px;}
+      table,th,td{border:3px solid #000;}
+      th,td{padding:6px;text-align:center;font-size:14px;}
+      td[contenteditable="true"]{cursor:text;}
+      .table-top td,.table-top th{background:#ffd6e7;}
+      .table-bottom td,.table-bottom th{background:#e6d6ff;}
+      .date-row td{
+        background:#ffcccc!important;cursor:pointer;user-select:none;font-size:7px;
+      }
+      .graph-wrap{
+        margin-top:8px;padding:8px;background:#fff;border:2px dashed #b39ddb;border-radius:8px;
+        display:none;
+      }
+      .editing{
+        outline:2px dashed #ff6f61;background:#fff5ee;
+      }
+    </style>
 </head>
 <body>
 
-<h1>Jaira Kaira Swimmers</h1>
+    <h1>Jaira Kaira Swimmers</h1>
 
-<div class="container-controls">
-  <button class="control-btn add">+</button>
-  <button class="control-btn remove">-</button>
-</div>
+    <div class="container-controls">
+      <button class="control-btn add">+</button>
+      <button class="control-btn remove">-</button>
+    </div>
 
-<div id="zones"></div>
+    <div id="zones"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script>
-(function () {
-  const zonesRoot = document.getElementById('zones');
-  const addContainerBtn = document.querySelector('.control-btn.add');
-  const removeContainerBtn = document.querySelector('.control-btn.remove');
-
-  let containerCount = 3;
-  renderInitialContainers();
-
-  addContainerBtn.addEventListener('click', () => {
-    containerCount++;
-    zonesRoot.appendChild(createZone(containerCount));
-  });
-
-  removeContainerBtn.addEventListener('click', () => {
-    if (zonesRoot.lastElementChild) {
-      if (confirm("Are you sure you want to remove the last container?")) {
-        zonesRoot.removeChild(zonesRoot.lastElementChild);
-        containerCount = Math.max(0, containerCount - 1);
+    <script>
+    (function () {
+      // --- FIREBASE SETUP ---
+      const firebaseConfig = {
+        apiKey: "AIzaSyD_5YgdpDfpa0dJtcfkUii_UjCKO9oF4J0",
+        authDomain: "shamankingdata.firebaseapp.com",
+        projectId: "shamankingdata",
+        storageBucket: "shamankingdata.firebasestorage.app",
+        messagingSenderId: "757444066890",
+        appId: "1:757444066890:web:e4f9d41e2905e588d930b3",
+        databaseURL: "https://shamankingdata-default-rtdb.firebaseio.com/" // IMPORTANT: Add your Database URL
+      };
+      
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+    
+      // --- DOM ELEMENTS ---
+      const zonesRoot = document.getElementById('zones');
+      const addContainerBtn = document.querySelector('.control-btn.add');
+      const removeContainerBtn = document.querySelector('.control-btn.remove');
+    
+      // --- UTILITY FUNCTIONS ---
+      // Debounce saving to avoid excessive writes to Firebase
+      function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => func.apply(this, args), delay);
+        };
       }
-    }
-  });
-
-  function renderInitialContainers() {
-    for (let i = 1; i <= containerCount; i++) {
-      zonesRoot.appendChild(createZone(i));
-    }
-  }
-
-  /* ---------- Container (zone) ---------- */
-  function createZone(index) {
-    const zone = document.createElement('div');
-    zone.className = 'zone';
-
-    const header = document.createElement('div');
-    header.className = 'zone-header';
-
-    const plus = document.createElement('span');
-    plus.className = 'plus';
-    plus.textContent = '+';
-
-    const title = document.createElement('span');
-    title.textContent = `Container #${index}`;
-    makeCaptionEditable(title);
-
-    header.appendChild(plus);
-    header.appendChild(title);
-
-    const content = document.createElement('div');
-    content.className = 'zone-content';
-
-    const ddControls = document.createElement('div');
-    ddControls.className = 'dropdown-controls';
-
-    const addDropdownBtn = document.createElement('button');
-    addDropdownBtn.className = 'add-btn';
-    addDropdownBtn.textContent = '+';
-    addDropdownBtn.addEventListener('click', () => addOneDropdown(content));
-
-    const removeDropdownBtn = document.createElement('button');
-    removeDropdownBtn.className = 'add-btn';
-    removeDropdownBtn.style.background = '#ef9a9a';
-    removeDropdownBtn.textContent = '-';
-    removeDropdownBtn.addEventListener('click', () => removeOneDropdown(content));
-
-    ddControls.appendChild(addDropdownBtn);
-    ddControls.appendChild(removeDropdownBtn);
-
-    const body = document.createElement('div');
-    body.className = 'zone-body';
-
-    content.appendChild(ddControls);
-    content.appendChild(body);
-
-    header.addEventListener('click', (e) => {
-      if (e.target.isContentEditable) return;
-      zone.toggleAttribute('open');
-    });
-
-    zone.appendChild(header);
-    zone.appendChild(content);
-    return zone;
-  }
-
-  function addOneDropdown(containerEl) {
-    const body = containerEl.querySelector('.zone-body');
-    const idx = body.children.length + 1;
-    const section = createSection(`Dropdown ${idx}`);
-    body.appendChild(section);
-  }
-
-  function removeOneDropdown(containerEl) {
-    const body = containerEl.querySelector('.zone-body');
-    const last = body.lastElementChild;
-    if (!last) return;
-    if (confirm("Are you sure you want to remove the last dropdown?")) {
-      body.removeChild(last);
-    }
-  }
-
-  /* ---------- Section (dropdown) ---------- */
-  function createSection(caption) {
-    const section = document.createElement('div');
-    section.className = 'section';
-
-    const header = document.createElement('button');
-    header.className = 'header';
-    header.setAttribute('aria-expanded', 'false');
-
-    const plus = document.createElement('span');
-    plus.className = 'plus';
-    plus.textContent = '+';
-
-    const title = document.createElement('span');
-    title.textContent = caption;
-    makeCaptionEditable(title);
-
-    header.appendChild(plus);
-    header.appendChild(title);
-
-    const content = document.createElement('div');
-    content.className = 'content';
-
-    // two independent tables
-    const topTitle = document.createElement('div');
-    topTitle.className = 'table-title';
-    topTitle.textContent = 'Jaira';
-    const top = buildEditableTable(1, 1, 'table-top');
-
-    const bottomTitle = document.createElement('div');
-    bottomTitle.className = 'table-title';
-    bottomTitle.textContent = 'Kaira';
-    const bottom = buildEditableTable(1, 1, 'table-bottom');
-
-    content.appendChild(topTitle);
-    content.appendChild(top.toolbar);
-    content.appendChild(top.container);
-    content.appendChild(top.graphWrap);
-
-    const hr = document.createElement('hr');
-    content.appendChild(hr);
-
-    content.appendChild(bottomTitle);
-    content.appendChild(bottom.toolbar);
-    content.appendChild(bottom.container);
-    content.appendChild(bottom.graphWrap);
-
-    header.addEventListener('click', (e) => {
-      if (e.target.isContentEditable) return;
-      section.toggleAttribute('open');
-      header.setAttribute('aria-expanded', section.hasAttribute('open'));
-    });
-
-    section.appendChild(header);
-    section.appendChild(content);
-    return section;
-  }
-
-  /* ---------- Build one editable table block ---------- */
-  function buildEditableTable(rows, cols, extraClass) {
-    const container = document.createElement('div');
-    container.className = 'table-container';
-
-    const table = document.createElement('table');
-    if (extraClass) table.classList.add(extraClass);
-
-    for (let r = 0; r < rows; r++) {
-      const tr = document.createElement('tr');
-      for (let c = 0; c < cols; c++) {
-        const td = document.createElement('td');
-        td.contentEditable = "true";
-        tr.appendChild(td);
+      const debouncedSave = debounce(saveStateToFirebase, 800); // Save 800ms after the last change
+    
+      // --- FIREBASE DATA HANDLING ---
+      function saveStateToFirebase() {
+        const state = getCurrentStateFromDOM();
+        database.ref('appData').set(state)
+          .then(() => console.log("State saved successfully!"))
+          .catch(err => console.error("Error saving state: ", err));
       }
-      table.appendChild(tr);
-    }
-
-    createOrRefreshDateRow(table);
-
-    const toolbar = document.createElement('div');
-    toolbar.className = 'table-toolbar';
-
-    const addColBtn = document.createElement('button');
-    addColBtn.className = 'mini-btn add-col';
-    addColBtn.textContent = '+ Column';
-    addColBtn.addEventListener('click', () => {
-      addColumn(table);
-      createOrRefreshDateRow(table);
-    });
-
-    const addRowBtn = document.createElement('button');
-    addRowBtn.className = 'mini-btn add-row';
-    addRowBtn.textContent = '+ Row';
-    addRowBtn.addEventListener('click', () => {
-      addRow(table);
-      createOrRefreshDateRow(table);
-    });
-
-    const delColBtn = document.createElement('button');
-    delColBtn.className = 'mini-btn del-col';
-    delColBtn.textContent = '- Column';
-    delColBtn.addEventListener('click', () => {
-      if (confirm("Delete last column?")) {
-        removeColumn(table);
-        createOrRefreshDateRow(table);
+    
+      function loadStateFromFirebase() {
+        database.ref('appData').once('value', (snapshot) => {
+          if (snapshot.exists()) {
+            const state = snapshot.val();
+            console.log("State loaded successfully!");
+            renderState(state);
+          } else {
+            console.log("No data found. Rendering initial containers.");
+            renderInitialContainers(3); // Start with 3 new containers if nothing is saved
+          }
+        });
       }
-    });
-
-    const delRowBtn = document.createElement('button');
-    delRowBtn.className = 'mini-btn del-row';
-    delRowBtn.textContent = '- Row';
-    delRowBtn.addEventListener('click', () => {
-      if (confirm("Delete last row?")) {
-        removeRow(table);
-        createOrRefreshDateRow(table);
+    
+      // --- STATE SCRAPING & RENDERING ---
+      function getCurrentStateFromDOM() {
+        const containers = [...zonesRoot.querySelectorAll('.zone')].map(zoneEl => {
+          const containerTitle = zoneEl.querySelector('.zone-header > span:last-child').textContent;
+          const dropdowns = [...zoneEl.querySelectorAll('.section')].map(sectionEl => {
+            const dropdownTitle = sectionEl.querySelector('.header > span:last-child').textContent;
+            const jairaTableEl = sectionEl.querySelector('.table-top');
+            const kairaTableEl = sectionEl.querySelector('.table-bottom');
+    
+            const getTableData = (tableEl) => {
+              if (!tableEl) return { dataRows: [], dateRow: [] };
+              const dataRows = [...tableEl.querySelectorAll('tr:not(.date-row)')].map(tr => 
+                [...tr.cells].map(td => td.textContent)
+              );
+              const dateRowCells = tableEl.querySelector('.date-row')?.cells || [];
+              const dateRow = [...dateRowCells].map(td => td.textContent);
+              return { dataRows, dateRow };
+            };
+    
+            return {
+              title: dropdownTitle,
+              jairaTable: getTableData(jairaTableEl),
+              kairaTable: getTableData(kairaTableEl),
+            };
+          });
+          return { title: containerTitle, dropdowns };
+        });
+        return { containers };
       }
-    });
-
-    const graphBtn = document.createElement('button');
-    graphBtn.className = 'graph-btn';
-    graphBtn.textContent = '📈';
-
-    const graphWrap = document.createElement('div');
-    graphWrap.className = 'graph-wrap';
-    const canvas = document.createElement('canvas');
-    graphWrap.appendChild(canvas);
-
-    toolbar.appendChild(addColBtn);
-    toolbar.appendChild(addRowBtn);
-    toolbar.appendChild(delColBtn);
-    toolbar.appendChild(delRowBtn);
-    toolbar.appendChild(graphBtn);
-
-    graphBtn.addEventListener('click', () => toggleGraph(table, canvas, graphWrap));
-
-    container.appendChild(table);
-    updateTableScroll(table);
-
-    return { container, table, toolbar, graphWrap };
-  }
-
-  /* ---------- Helpers: DOM/table ---------- */
-  function getTBody(table){
-    return table.tBodies && table.tBodies.length ? table.tBodies[0] : table;
-  }
-
-  /* ---------- Helpers: date row ---------- */
-  function stampNow(e) {
-    const d = new Date();
-    const mm = String(d.getMonth() + 1).padStart(2,'0');
-    const dd = String(d.getDate()).padStart(2,'0');
-    const yy = String(d.getFullYear()).slice(2);
-    e.target.textContent = `${mm}/${dd}/${yy}`;
-  }
-
-  function getDateRow(table) {
-    return [...table.rows].find(r => r.classList.contains('date-row')) || null;
-  }
-
-  function getColumnCount(table) {
-    const normalRows = [...table.rows].filter(r => !r.classList.contains('date-row'));
-    if (normalRows.length) return normalRows[0].cells.length;
-    const dr = getDateRow(table);
-    return dr ? dr.cells.length : 0;
-  }
-
-  function createOrRefreshDateRow(table) {
-    const cols = getColumnCount(table) || 1;
-    let dateRow = getDateRow(table);
-    if (!dateRow) {
-      dateRow = document.createElement('tr');
-      dateRow.classList.add('date-row');
-      for (let i = 0; i < cols; i++) {
-        const td = document.createElement('td');
-        td.contentEditable = "false";
-        td.addEventListener('click', stampNow);
-        dateRow.appendChild(td);
+    
+      function renderState(state) {
+        zonesRoot.innerHTML = ''; // Clear current content
+        state.containers?.forEach(containerData => {
+          const zone = createZone(null, containerData.title);
+          zonesRoot.appendChild(zone);
+          const content = zone.querySelector('.zone-content');
+          containerData.dropdowns?.forEach(dropdownData => {
+            addOneDropdown(content, dropdownData);
+          });
+        });
+        // Update container count to match loaded state
+        window.containerCount = state.containers?.length || 0;
       }
-      getTBody(table).appendChild(dateRow);
-    } else {
-      const diff = cols - dateRow.cells.length;
-      if (diff > 0) {
-        for (let i = 0; i < diff; i++) {
+      
+      function renderInitialContainers(count) {
+        zonesRoot.innerHTML = '';
+        window.containerCount = count;
+        for (let i = 1; i <= count; i++) {
+          zonesRoot.appendChild(createZone(i));
+        }
+        saveStateToFirebase(); // Save the initial state
+      }
+    
+      // --- EVENT LISTENERS ---
+      addContainerBtn.addEventListener('click', () => {
+        window.containerCount++;
+        zonesRoot.appendChild(createZone(window.containerCount));
+        debouncedSave();
+      });
+    
+      removeContainerBtn.addEventListener('click', () => {
+        if (zonesRoot.lastElementChild) {
+          if (confirm("Are you sure you want to remove the last container?")) {
+            zonesRoot.removeChild(zonesRoot.lastElementChild);
+            window.containerCount = Math.max(0, window.containerCount - 1);
+            debouncedSave();
+          }
+        }
+      });
+    
+      // --- MODIFIED CREATION FUNCTIONS (to handle loading data) ---
+      function createZone(index, titleText = `Container #${index}`) {
+        const zone = document.createElement('div');
+        zone.className = 'zone';
+    
+        const header = document.createElement('div');
+        header.className = 'zone-header';
+        const plus = document.createElement('span');
+        plus.className = 'plus';
+        plus.textContent = '+';
+        const title = document.createElement('span');
+        title.textContent = titleText;
+        makeCaptionEditable(title);
+    
+        header.appendChild(plus);
+        header.appendChild(title);
+    
+        const content = document.createElement('div');
+        content.className = 'zone-content';
+        const ddControls = document.createElement('div');
+        ddControls.className = 'dropdown-controls';
+    
+        const addDropdownBtn = document.createElement('button');
+        addDropdownBtn.className = 'add-btn';
+        addDropdownBtn.textContent = '+';
+        addDropdownBtn.addEventListener('click', () => addOneDropdown(content));
+    
+        const removeDropdownBtn = document.createElement('button');
+        removeDropdownBtn.className = 'add-btn';
+        removeDropdownBtn.style.background = '#ef9a9a';
+        removeDropdownBtn.textContent = '-';
+        removeDropdownBtn.addEventListener('click', () => removeOneDropdown(content));
+        
+        ddControls.appendChild(addDropdownBtn);
+        ddControls.appendChild(removeDropdownBtn);
+    
+        const body = document.createElement('div');
+        body.className = 'zone-body';
+        content.appendChild(ddControls);
+        content.appendChild(body);
+    
+        header.addEventListener('click', (e) => {
+          if (e.target.isContentEditable) return;
+          zone.toggleAttribute('open');
+        });
+    
+        zone.appendChild(header);
+        zone.appendChild(content);
+        return zone;
+      }
+    
+      function addOneDropdown(containerEl, data = null) {
+        const body = containerEl.querySelector('.zone-body');
+        const idx = body.children.length + 1;
+        const section = createSection(data ? data.title : `Dropdown ${idx}`, data);
+        body.appendChild(section);
+        if (!data) debouncedSave(); // Only save if it's a new item, not during initial load
+      }
+    
+      function removeOneDropdown(containerEl) {
+        const body = containerEl.querySelector('.zone-body');
+        if (!body.lastElementChild) return;
+        if (confirm("Are you sure you want to remove the last dropdown?")) {
+          body.removeChild(body.lastElementChild);
+          debouncedSave();
+        }
+      }
+    
+      function createSection(caption, data = null) {
+        const section = document.createElement('div');
+        section.className = 'section';
+        const header = document.createElement('button');
+        header.className = 'header';
+        const plus = document.createElement('span');
+        plus.className = 'plus';
+        plus.textContent = '+';
+        const title = document.createElement('span');
+        title.textContent = caption;
+        makeCaptionEditable(title);
+        header.appendChild(plus);
+        header.appendChild(title);
+    
+        const content = document.createElement('div');
+        content.className = 'content';
+    
+        const jairaData = data ? data.jairaTable : { dataRows: [[]], dateRow: [] };
+        const kairaData = data ? data.kairaTable : { dataRows: [[]], dateRow: [] };
+        
+        const topTitle = document.createElement('div');
+        topTitle.className = 'table-title';
+        topTitle.textContent = 'Jaira';
+        const top = buildEditableTable(jairaData, 'table-top');
+        
+        const bottomTitle = document.createElement('div');
+        bottomTitle.className = 'table-title';
+        bottomTitle.textContent = 'Kaira';
+        const bottom = buildEditableTable(kairaData, 'table-bottom');
+    
+        content.appendChild(topTitle);
+        content.appendChild(top.toolbar);
+        content.appendChild(top.container);
+        content.appendChild(top.graphWrap);
+        content.appendChild(document.createElement('hr'));
+        content.appendChild(bottomTitle);
+        content.appendChild(bottom.toolbar);
+        content.appendChild(bottom.container);
+        content.appendChild(bottom.graphWrap);
+    
+        header.addEventListener('click', (e) => {
+          if (e.target.isContentEditable) return;
+          section.toggleAttribute('open');
+        });
+        section.appendChild(header);
+        section.appendChild(content);
+        return section;
+      }
+    
+      function buildEditableTable(tableData, extraClass) {
+        const container = document.createElement('div');
+        container.className = 'table-container';
+        const table = document.createElement('table');
+        if (extraClass) table.classList.add(extraClass);
+        
+        const rows = tableData.dataRows.length > 0 ? tableData.dataRows : [['']];
+        
+        rows.forEach(rowData => {
+          const tr = document.createElement('tr');
+          rowData.forEach(cellData => {
+            const td = document.createElement('td');
+            td.contentEditable = "true";
+            td.textContent = cellData;
+            td.addEventListener('blur', debouncedSave);
+            tr.appendChild(td);
+          });
+          table.appendChild(tr);
+        });
+    
+        createOrRefreshDateRow(table, tableData.dateRow);
+        
+        const toolbar = document.createElement('div');
+        toolbar.className = 'table-toolbar';
+    
+        const addColBtn = document.createElement('button');
+        addColBtn.className = 'mini-btn add-col';
+        addColBtn.textContent = '+ Column';
+        addColBtn.addEventListener('click', () => { addColumn(table); createOrRefreshDateRow(table); debouncedSave(); });
+    
+        const addRowBtn = document.createElement('button');
+        addRowBtn.className = 'mini-btn add-row';
+        addRowBtn.textContent = '+ Row';
+        addRowBtn.addEventListener('click', () => { addRow(table); debouncedSave(); });
+    
+        const delColBtn = document.createElement('button');
+        delColBtn.className = 'mini-btn del-col';
+        delColBtn.textContent = '- Column';
+        delColBtn.addEventListener('click', () => {
+          if (confirm("Delete last column?")) { removeColumn(table); createOrRefreshDateRow(table); debouncedSave(); }
+        });
+    
+        const delRowBtn = document.createElement('button');
+        delRowBtn.className = 'mini-btn del-row';
+        delRowBtn.textContent = '- Row';
+        delRowBtn.addEventListener('click', () => {
+          if (confirm("Delete last row?")) { removeRow(table); debouncedSave(); }
+        });
+    
+        const graphBtn = document.createElement('button');
+        graphBtn.className = 'graph-btn';
+        graphBtn.textContent = '📈';
+        const graphWrap = document.createElement('div');
+        graphWrap.className = 'graph-wrap';
+        const canvas = document.createElement('canvas');
+        graphWrap.appendChild(canvas);
+    
+        toolbar.appendChild(addColBtn);
+        toolbar.appendChild(addRowBtn);
+        toolbar.appendChild(delColBtn);
+        toolbar.appendChild(delRowBtn);
+        toolbar.appendChild(graphBtn);
+        graphBtn.addEventListener('click', () => toggleGraph(table, canvas, graphWrap));
+        container.appendChild(table);
+        updateTableScroll(table);
+        return { container, table, toolbar, graphWrap };
+      }
+      
+      function getTBody(table){
+        return table.tBodies && table.tBodies.length ? table.tBodies[0] : table;
+      }
+    
+      function stampNow(e) {
+        const d = new Date();
+        const mm = String(d.getMonth() + 1).padStart(2,'0');
+        const dd = String(d.getDate()).padStart(2,'0');
+        const yy = String(d.getFullYear()).slice(2);
+        e.target.textContent = `${mm}/${dd}/${yy}`;
+        debouncedSave();
+      }
+    
+      function getDateRow(table) {
+        return [...table.rows].find(r => r.classList.contains('date-row')) || null;
+      }
+    
+      function getColumnCount(table) {
+        const normalRows = [...table.rows].filter(r => !r.classList.contains('date-row'));
+        if (normalRows.length) return normalRows[0].cells.length;
+        const dr = getDateRow(table);
+        return dr ? dr.cells.length : 0;
+      }
+      
+      function createOrRefreshDateRow(table, dateData = []) {
+        const cols = getColumnCount(table) || 1;
+        let dateRow = getDateRow(table);
+        if (!dateRow) {
+          dateRow = document.createElement('tr');
+          dateRow.classList.add('date-row');
+          for (let i = 0; i < cols; i++) {
+            const td = document.createElement('td');
+            td.contentEditable = "false";
+            td.textContent = dateData[i] || '';
+            td.addEventListener('click', stampNow);
+            dateRow.appendChild(td);
+          }
+          getTBody(table).appendChild(dateRow);
+        } else {
+          const diff = cols - dateRow.cells.length;
+          if (diff > 0) {
+            for (let i = 0; i < diff; i++) {
+              const td = document.createElement('td');
+              td.contentEditable = "false";
+              td.addEventListener('click', stampNow);
+              dateRow.appendChild(td);
+            }
+          } else if (diff < 0) {
+            for (let i = 0; i < -diff; i++) {
+              dateRow.deleteCell(-1);
+            }
+          }
+        }
+      }
+    
+      function updateTableScroll(table) {
+        const firstNormal = [...table.rows].find(r => !r.classList.contains('date-row'));
+        const cols = firstNormal ? firstNormal.cells.length : 0;
+        table.classList.toggle('wide', cols > 10);
+      }
+    
+      function addColumn(table) {
+        const dateRow = getDateRow(table);
+        [...table.rows].forEach(tr => {
           const td = document.createElement('td');
-          td.contentEditable = "false";
-          td.addEventListener('click', stampNow);
-          dateRow.appendChild(td);
-        }
-      } else if (diff < 0) {
-        for (let i = 0; i < -diff; i++) {
-          dateRow.deleteCell(-1);
-        }
+          if (tr === dateRow) {
+            td.contentEditable = "false";
+            td.addEventListener('click', stampNow);
+          } else {
+            td.contentEditable = "true";
+            td.addEventListener('blur', debouncedSave);
+          }
+          tr.appendChild(td);
+        });
+        updateTableScroll(table);
       }
-    }
-  }
-
-  /* ---------- Table operations ---------- */
-  function updateTableScroll(table) {
-    const firstNormal = [...table.rows].find(r => !r.classList.contains('date-row'));
-    const cols = firstNormal ? firstNormal.cells.length : 0;
-    if (cols > 10) table.classList.add('wide');
-    else table.classList.remove('wide');
-  }
-
-  function addColumn(table) {
-    const dateRow = getDateRow(table);
-    [...table.rows].forEach(tr => {
-      const td = document.createElement('td');
-      if (tr === dateRow) {
-        td.contentEditable = "false";
-        td.addEventListener('click', stampNow);
-      } else {
-        td.contentEditable = "true";
+    
+      function removeColumn(table) {
+        const firstNormal = [...table.rows].find(r => !r.classList.contains('date-row'));
+        if (!firstNormal || firstNormal.cells.length <= 1) return;
+        [...table.rows].forEach(tr => tr.deleteCell(-1));
+        updateTableScroll(table);
       }
-      tr.appendChild(td);
-    });
-    updateTableScroll(table);
-  }
-
-  function removeColumn(table) {
-    const firstNormal = [...table.rows].find(r => !r.classList.contains('date-row'));
-    if (!firstNormal || firstNormal.cells.length <= 1) return;
-    [...table.rows].forEach(tr => tr.deleteCell(-1));
-    updateTableScroll(table);
-  }
-
-  function addRow(table) {
-    const dateRow = getDateRow(table);
-    const cols = getColumnCount(table) || 1;
-    const tr = document.createElement('tr');
-    for (let c = 0; c < cols; c++) {
-      const td = document.createElement('td');
-      td.contentEditable = "true";
-      tr.appendChild(td);
-    }
-    if (dateRow && dateRow.parentNode) {
-      dateRow.parentNode.insertBefore(tr, dateRow);
-    } else {
-      getTBody(table).appendChild(tr);
-    }
-    updateTableScroll(table);
-  }
-
-  function removeRow(table) {
-    const normals = [...table.rows].filter(r => !r.classList.contains('date-row'));
-    if (normals.length <= 1) return;
-    normals[normals.length - 1].remove();
-    updateTableScroll(table);
-  }
-
-  /* ---------- Graph (skip blank cols, break at blanks, stop at last value) ---------- */
-  function toggleGraph(table, canvas, graphWrap) {
-    if (graphWrap.style.display === 'block') {
-      graphWrap.style.display = 'none';
-      return;
-    }
-    graphWrap.style.display = 'block';
-
-    const normalRows = [...table.rows].filter(r => !r.classList.contains('date-row'));
-    if (!normalRows.length) return;
-
-    const colCount = normalRows[0].cells.length;
-
-    // Find last column that has any numeric value
-    let lastNonEmptyCol = -1;
-    for (let c = 0; c < colCount; c++) {
-      for (let r = 0; r < normalRows.length; r++) {
-        const val = parseFloat(normalRows[r].cells[c].textContent);
-        if (!isNaN(val)) {
-          lastNonEmptyCol = c;
-          break;
+    
+      function addRow(table) {
+        const dateRow = getDateRow(table);
+        const cols = getColumnCount(table) || 1;
+        const tr = document.createElement('tr');
+        for (let c = 0; c < cols; c++) {
+          const td = document.createElement('td');
+          td.contentEditable = "true";
+          td.addEventListener('blur', debouncedSave);
+          tr.appendChild(td);
+        }
+        if (dateRow && dateRow.parentNode) {
+          dateRow.parentNode.insertBefore(tr, dateRow);
+        } else {
+          getTBody(table).appendChild(tr);
         }
       }
-    }
-    if (lastNonEmptyCol === -1) return;
-
-    // Keep only columns with at least one number up to lastNonEmptyCol
-    const validCols = [];
-    for (let c = 0; c <= lastNonEmptyCol; c++) {
-      let hasNumber = false;
-      for (let r = 0; r < normalRows.length; r++) {
-        const v = parseFloat(normalRows[r].cells[c].textContent);
-        if (!isNaN(v)) { hasNumber = true; break; }
+    
+      function removeRow(table) {
+        const normals = [...table.rows].filter(r => !r.classList.contains('date-row'));
+        if (normals.length <= 1) return;
+        normals[normals.length - 1].remove();
       }
-      if (hasNumber) validCols.push(c);
-    }
-    if (!validCols.length) return;
-
-    const labels = validCols.map(c => `Col ${c + 1}`);
-    const datasets = [];
-
-    normalRows.forEach((row, rIdx) => {
-      const raw = validCols.map(c => {
-        const v = parseFloat(row.cells[c].textContent);
-        return isNaN(v) ? null : v;
-      });
-
-      const numericIdxs = raw.map((v,i)=>v===null?-1:i).filter(i=>i!==-1);
-      if (!numericIdxs.length) return;
-      const first = numericIdxs[0];
-      const last  = numericIdxs[numericIdxs.length-1];
-
-      const data = raw.map((v,i)=> (i<first || i>last)? null : v);
-
-      datasets.push({
-        label: `Row ${rIdx + 1}`,
-        data,
-        borderColor: `hsl(${(rIdx * 60) % 360}, 70%, 50%)`,
-        backgroundColor: `hsla(${(rIdx * 60) % 360}, 70%, 50%, .15)`,
-        fill: false,
-        spanGaps: false,   // break at blanks
-        tension: 0.2,
-        pointRadius: 3,
-        pointHoverRadius: 5
-      });
-    });
-
-    // Destroy existing chart if any
-    if (canvas._chart) canvas._chart.destroy();
-
-    canvas._chart = new Chart(canvas.getContext('2d'), {
-      type: 'line',
-      data: { labels, datasets },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: 'bottom' } },
-        scales: {
-          x: { title: { display: true, text: 'Columns' } },
-          y: { title: { display: true, text: 'Value' } }
+    
+      function toggleGraph(table, canvas, graphWrap) {
+        if (graphWrap.style.display === 'block') {
+          graphWrap.style.display = 'none';
+          return;
+        }
+        graphWrap.style.display = 'block';
+        const normalRows = [...table.rows].filter(r => !r.classList.contains('date-row'));
+        if (!normalRows.length) return;
+        const colCount = normalRows[0].cells.length;
+        let lastNonEmptyCol = -1;
+        for (let c = 0; c < colCount; c++) {
+          for (let r = 0; r < normalRows.length; r++) {
+            if (!isNaN(parseFloat(normalRows[r].cells[c].textContent))) {
+              lastNonEmptyCol = c;
+              break;
+            }
+          }
+        }
+        if (lastNonEmptyCol === -1) return;
+        const validCols = [];
+        for (let c = 0; c <= lastNonEmptyCol; c++) {
+          let hasNumber = false;
+          for (let r = 0; r < normalRows.length; r++) {
+            if (!isNaN(parseFloat(normalRows[r].cells[c].textContent))) { hasNumber = true; break; }
+          }
+          if (hasNumber) validCols.push(c);
+        }
+        if (!validCols.length) return;
+        const labels = validCols.map(c => `Col ${c + 1}`);
+        const datasets = [];
+        normalRows.forEach((row, rIdx) => {
+          const raw = validCols.map(c => {
+            const v = parseFloat(row.cells[c].textContent);
+            return isNaN(v) ? null : v;
+          });
+          const numericIdxs = raw.map((v, i) => v === null ? -1 : i).filter(i => i !== -1);
+          if (!numericIdxs.length) return;
+          const first = numericIdxs[0];
+          const last = numericIdxs[numericIdxs.length - 1];
+          const data = raw.map((v, i) => (i < first || i > last) ? null : v);
+          datasets.push({
+            label: `Row ${rIdx + 1}`, data,
+            borderColor: `hsl(${(rIdx * 60) % 360}, 70%, 50%)`,
+            backgroundColor: `hsla(${(rIdx * 60) % 360}, 70%, 50%, .15)`,
+            fill: false, spanGaps: false, tension: 0.2,
+          });
+        });
+        if (canvas._chart) canvas._chart.destroy();
+        canvas._chart = new Chart(canvas.getContext('2d'), {
+          type: 'line', data: { labels, datasets },
+          options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+      }
+    
+      function makeCaptionEditable(spanEl) {
+        spanEl.style.cursor = 'text';
+        spanEl.addEventListener('dblclick', (e) => { e.stopPropagation(); enableEdit(spanEl); });
+        spanEl.setAttribute('tabindex', '0');
+        spanEl.addEventListener('keydown', (e) => { if (e.key === 'F2') { e.preventDefault(); enableEdit(spanEl); } });
+    
+        function enableEdit(el) {
+          el.contentEditable = 'true';
+          el.classList.add('editing');
+          el.focus();
+          window.getSelection().selectAllChildren(el);
+    
+          function commit() {
+            el.contentEditable = 'false';
+            el.classList.remove('editing');
+            cleanup();
+            debouncedSave();
+          }
+          function onKey(e) { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); commit(); } }
+          function onBlur() { commit(); }
+          function cleanup() {
+            el.removeEventListener('keydown', onKey);
+            el.removeEventListener('blur', onBlur);
+          }
+          el.addEventListener('keydown', onKey);
+          el.addEventListener('blur', onBlur);
         }
       }
-    });
-  }
-
-  /* ---------- Editable captions ---------- */
-  function makeCaptionEditable(spanEl) {
-    spanEl.style.userSelect = 'text';
-    spanEl.style.cursor = 'text';
-    spanEl.addEventListener('dblclick', (e) => {
-      e.stopPropagation();
-      enableEdit(spanEl);
-    });
-    spanEl.setAttribute('tabindex', '0');
-    spanEl.addEventListener('keydown', (e) => {
-      if (e.key === 'F2') {
-        e.preventDefault();
-        enableEdit(spanEl);
-      }
-    });
-
-    function enableEdit(el) {
-      const original = el.textContent;
-      el.contentEditable = 'true';
-      el.classList.add('editing');
-      el.focus();
-      const range = document.createRange();
-      range.selectNodeContents(el);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-
-      function commit() {
-        el.contentEditable = 'false';
-        el.classList.remove('editing');
-        cleanup();
-      }
-      function cancel() {
-        el.textContent = original;
-        el.contentEditable = 'false';
-        el.classList.remove('editing');
-        cleanup();
-      }
-      function onKey(e) {
-        if (e.key === 'Enter') { e.preventDefault(); commit(); }
-        else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
-      }
-      function onBlur() { commit(); }
-      function cleanup() {
-        el.removeEventListener('keydown', onKey);
-        el.removeEventListener('blur', onBlur);
-      }
-      el.addEventListener('keydown', onKey);
-      el.addEventListener('blur', onBlur);
-    }
-  }
-})();
-</script>
+    
+      // --- INITIALIZE APP ---
+      loadStateFromFirebase();
+    
+    })();
+    </script>
 
 </body>
 </html>
