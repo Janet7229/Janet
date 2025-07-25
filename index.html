@@ -111,15 +111,16 @@
     <script>
     (function () {
       // --- FIREBASE SETUP ---
-      const firebaseConfig = {
-        apiKey: "AIzaSyD_5YgdpDfpa0dJtcfkUii_UjCKO9oF4J0",
-        authDomain: "shamankingdata.firebaseapp.com",
-        projectId: "shamankingdata",
-        storageBucket: "shamankingdata.firebasestorage.app",
-        messagingSenderId: "757444066890",
-        appId: "1:757444066890:web:e4f9d41e2905e588d930b3",
-        databaseURL: "https://shamankingdata-default-rtdb.firebaseio.com/"
-      };
+     const firebaseConfig = {
+  apiKey: "AIzaSyD_5YgdpDfpa0dJtcfkUii_UjCKO9oF4J0",
+  authDomain: "shamankingdata.firebaseapp.com",
+  projectId: "shamankingdata",
+  storageBucket: "shamankingdata.firebasestorage.app",
+  messagingSenderId: "757444066890",
+  appId: "1:757444066890:web:e4f9d41e2905e588d930b3",
+  // 👉 Make sure this line exists
+  databaseURL: "https://shamankingdata-default-rtdb.firebaseio.com/"
+};
       
       // Initialize Firebase
       firebase.initializeApp(firebaseConfig);
