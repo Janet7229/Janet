@@ -119,6 +119,7 @@
       document.addEventListener('DOMContentLoaded', () => {
         
         let app, database;
+        let isSaving = false; // Flag to prevent re-render for the user making the change
 
         try {
             // --- FIREBASE SETUP (NEW PROJECT) ---
@@ -161,43 +162,54 @@
       
         // --- FIREBASE DATA HANDLING (V9 SYNTAX) ---
         function saveStateToFirebase() {
+          isSaving = true; // Set flag before saving
           const state = getCurrentStateFromDOM();
           const dataRef = ref(database, 'appData');
           set(dataRef, state)
             .then(() => console.log("State saved successfully!"))
-            .catch(err => console.error("Error saving state: ", err));
+            .catch(err => console.error("Error saving state: ", err))
+            .finally(() => {
+                // Reset the flag shortly after saving
+                setTimeout(() => { isSaving = false; }, 100);
+            });
         }
       
-        function loadStateFromFirebase() {
+        function listenForRealtimeUpdates() {
           const dataRef = ref(database, 'appData');
-          get(dataRef).then((snapshot) => {
+          onValue(dataRef, (snapshot) => {
+            // If the change was made by the current user, do nothing.
+            if (isSaving) {
+                return;
+            }
+
             if (snapshot.exists()) {
               const state = snapshot.val();
-              console.log("State loaded successfully!");
+              console.log("Real-time update received. Rendering new state.");
               renderState(state);
             } else {
-              console.log("No data found. Rendering initial containers.");
+              console.log("No data in database. Rendering initial containers.");
               renderInitialContainers(3);
             }
-          }).catch((err) => {
-              console.error("Error loading data from Firebase:", err);
-              renderInitialContainers(3);
+          }, (error) => {
+              console.error("Error listening for real-time updates:", error);
           });
         }
         
-        // --- REAL-TIME CONNECTION TEST ---
-        function checkDatabaseConnection() {
-            const connectedRef = ref(database, ".info/connected");
-            onValue(connectedRef, (snap) => {
-              if (snap.val() === true) {
-                console.log("Connection to database successful. Loading data...");
-                loadStateFromFirebase();
-              } else {
-                console.log("Connection to database may have failed or is disconnected.");
-              }
-            }, (error) => {
-                console.error("Database connection listener failed:", error);
-                zonesRoot.innerHTML = `<p style="color: orange; text-align: center;">Warning: Could not establish a real-time connection to the database. Data may not save or load correctly.</p>`;
+        // --- INITIAL DATA LOAD ---
+        function initialLoad() {
+            const dataRef = ref(database, 'appData');
+            get(dataRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    renderState(snapshot.val());
+                } else {
+                    renderInitialContainers(3);
+                }
+                // After initial load, start listening for live updates
+                listenForRealtimeUpdates();
+            }).catch(err => {
+                console.error("Initial data load failed:", err);
+                renderInitialContainers(3);
+                listenForRealtimeUpdates();
             });
         }
       
@@ -237,19 +249,31 @@
         }
       
         function renderState(state) {
+          // To prevent losing focus, we can try to be smarter about re-rendering
+          // For now, a full re-render is acceptable for remote changes
+          const activeElement = document.activeElement;
+          const activeId = activeElement.id;
+
           zonesRoot.innerHTML = '';
           if (state && state.containers && state.containers.length > 0) {
-              state.containers.forEach(containerData => {
-                const zone = createZone(null, containerData.title, containerData.isOpen);
+              state.containers.forEach((containerData, cIndex) => {
+                const zone = createZone(cIndex + 1, containerData.title, containerData.isOpen);
                 zonesRoot.appendChild(zone);
                 const content = zone.querySelector('.zone-content');
-                containerData.dropdowns?.forEach(dropdownData => {
-                  addOneDropdown(content, dropdownData);
+                containerData.dropdowns?.forEach((dropdownData, dIndex) => {
+                  addOneDropdown(content, dropdownData, cIndex, dIndex);
                 });
               });
               window.containerCount = state.containers.length;
           } else {
               renderInitialContainers(3);
+          }
+
+          if (activeId) {
+              const newActiveElement = document.getElementById(activeId);
+              if (newActiveElement) {
+                  newActiveElement.focus();
+              }
           }
         }
         
@@ -310,7 +334,7 @@
           const addDropdownBtn = document.createElement('button');
           addDropdownBtn.className = 'add-btn';
           addDropdownBtn.textContent = '+';
-          addDropdownBtn.addEventListener('click', () => addOneDropdown(content));
+          addDropdownBtn.addEventListener('click', () => addOneDropdown(content, null, index - 1, (zone.querySelectorAll('.section').length)));
       
           const removeDropdownBtn = document.createElement('button');
           removeDropdownBtn.className = 'add-btn';
@@ -337,10 +361,10 @@
           return zone;
         }
       
-        function addOneDropdown(containerEl, data = null) {
+        function addOneDropdown(containerEl, data = null, cIndex, dIndex) {
           const body = containerEl.querySelector('.zone-body');
           const idx = body.children.length + 1;
-          const section = createSection(data ? data.title : `Dropdown ${idx}`, data);
+          const section = createSection(data ? data.title : `Dropdown ${idx}`, data, cIndex, dIndex);
           body.appendChild(section);
           if (!data) debouncedSave();
         }
@@ -354,7 +378,7 @@
           }
         }
       
-        function createSection(caption, data = null) {
+        function createSection(caption, data = null, cIndex, dIndex) {
           const section = document.createElement('div');
           section.className = 'section';
           if (data && data.isOpen) {
@@ -669,7 +693,7 @@
         }
       
         // --- INITIALIZE APP ---
-        checkDatabaseConnection();
+        initialLoad();
       
       });
     
