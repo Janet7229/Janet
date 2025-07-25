@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dynamic Containers with Scrollable Tables</title>
+<style>
+  body {
+    font-family: "Calibri", "Helvetica Neue", Arial, sans-serif;
+    max-width: 900px;
+    margin: 2rem auto;
+    background: #fff8f0;
+    color: #333;
+  }
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #ff6f61;
+    text-shadow: 1px 1px 0px #fff;
+  }
+
+  .container-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  .control-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    color: white;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .control-btn.add { background: #a5d6a7; }
+  .control-btn.remove { background: #ef9a9a; }
+  .control-btn:hover { transform: scale(1.05); }
+
+  .zone {
+    border: 2px solid #ffb347;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    background: #fff4e6;
+  }
+  .zone-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 14px; background: #ffe0b2; cursor: pointer;
+    font-weight: bold; font-size: 1.1rem;
+  }
+  .zone .plus {
+    width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid #ff9800; border-radius: 4px; font-weight: bold; transition: transform .15s;
+    background: #ffcc80; color: #333;
+  }
+  .zone[open] .zone-header .plus { transform: rotate(45deg); }
+  .zone-content {
+    display: none; padding: 12px 14px 16px; background: #fffef8;
+  }
+  .zone[open] .zone-content { display: block; }
+
+  .mini-btn, .add-btn, .graph-btn {
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    transition: transform 0.1s, background 0.2s;
+    color: white;
+  }
+  .add-btn { background: #f48fb1; }
+  .mini-btn:nth-child(1) { background: #80cbc4; }
+  .mini-btn:nth-child(2) { background: #90caf9; }
+  .mini-btn:nth-child(3) { background: #f48fb1; }
+  .mini-btn:nth-child(4) { background: #ffcc80; }
+  .graph-btn { background: #b39ddb; }
+  .mini-btn:hover, .add-btn:hover, .graph-btn:hover { transform: scale(1.05); }
+
+  .dropdown-controls,
+  .table-toolbar {
+    display: flex; gap: .5rem; margin: 8px 0; flex-wrap: wrap;
+  }
+
+  .section {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 14px;
+    background: #ffe0b2;
+    cursor: pointer;
+    border: none;
+    font-weight: bold;
+  }
+  .header .plus {
+    width: 20px; height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ff9800;
+    border-radius: 4px;
+    font-weight: bold;
+    background: #ffcc80;
+  }
+  .content { padding: 10px 14px 14px; display: none; }
+  .section[open] .content { display: block; }
+
+  .table-title {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    text-align: center;
+    color: #4a148c;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    margin-top: 5px;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  table.wide {
+    min-width: 1000px; /* Force horizontal scroll if >10 columns */
+  }
+  table, th, td {
+    border: 3px solid #000;
+  }
+  th, td {
+    padding: 6px;
+    text-align: center;
+    font-size: 14px;
+  }
+  td[contenteditable="true"] { cursor: text; }
+  .table-top td, .table-top th { background: #ffd6e7; }
+  .table-bottom td, .table-bottom th { background: #e6d6ff; }
+
+  .date-row td {
+    background: #ffcccc !important;
+    cursor: pointer;
+    user-select: none;
+    font-size: 7px;
+  }
+
+  .graph-wrap {
+    margin-top: 8px;
+    padding: 8px;
+    background: #ffffff;
+    border: 2px dashed #b39ddb;
+    border-radius: 8px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<h1>Dynamic Containers</h1>
+
+<div class="container-controls">
+  <button class="control-btn add">+ Container</button>
+  <button class="control-btn remove">- Container</button>
+</div>
+
+<div id="zones"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+(function () {
+  const zonesRoot = document.getElementById('zones');
+  const addContainerBtn = document.querySelector('.control-btn.add');
+  const removeContainerBtn = document.querySelector('.control-btn.remove');
+
+  let containerCount = 3;
+  renderInitialContainers();
+
+  addContainerBtn.addEventListener('click', () => {
+    containerCount++;
+    zonesRoot.appendChild(createZone(containerCount));
+  });
+
+  removeContainerBtn.addEventListener('click', () => {
+    if (zonesRoot.lastElementChild) {
+      if (confirm("Are you sure you want to remove the last container?")) {
+        zonesRoot.removeChild(zonesRoot.lastElementChild);
+        containerCount = Math.max(0, containerCount - 1);
+      }
+    }
+  });
+
+  function renderInitialContainers() {
+    for (let i = 1; i <= containerCount; i++) {
+      zonesRoot.appendChild(createZone(i));
+    }
+  }
+
+  function createZone(index) {
+    const zone = document.createElement('div');
+    zone.className = 'zone';
+
+    const header = document.createElement('div');
+    header.className = 'zone-header';
+
+    const plus = document.createElement('span');
+    plus.className = 'plus';
+    plus.textContent = '+';
+
+    const title = document.createElement('span');
+    title.textContent = `Container #${index}`;
+    makeCaptionEditable(title);
+
+    header.appendChild(plus);
+    header.appendChild(title);
+
+    const content = document.createElement('div');
+    content.className = 'zone-content';
+
+    const ddControls = document.createElement('div');
+    ddControls.className = 'dropdown-controls';
+
+    const addDropdownBtn = document.createElement('button');
+    addDropdownBtn.className = 'add-btn';
+    addDropdownBtn.textContent = '+ Dropdown';
+    addDropdownBtn.addEventListener('click', () => addOneDropdown(content));
+
+    const removeDropdownBtn = document.createElement('button');
+    removeDropdownBtn.className = 'add-btn';
+    removeDropdownBtn.style.background = '#ef9a9a';
+    removeDropdownBtn.textContent = '- Dropdown';
+    removeDropdownBtn.addEventListener('click', () => removeOneDropdown(content));
+
+    ddControls.appendChild(addDropdownBtn);
+    ddControls.appendChild(removeDropdownBtn);
+
+    const body = document.createElement('div');
+    body.className = 'zone-body';
+
+    content.appendChild(ddControls);
+    content.appendChild(body);
+
+    header.addEventListener('click', (e) => {
+      if (e.target.isContentEditable) return;
+      zone.toggleAttribute('open');
+    });
+
+    zone.appendChild(header);
+    zone.appendChild(content);
+    return zone;
+  }
+
+  function addOneDropdown(containerEl) {
+    const body = containerEl.querySelector('.zone-body');
+    const idx = body.children.length + 1;
+    const section = createSection(`Dropdown ${idx}`);
+    body.appendChild(section);
+  }
+
+  function removeOneDropdown(containerEl) {
+    const body = containerEl.querySelector('.zone-body');
+    if (!body.lastElementChild) return;
+    if (confirm("Are you sure you want to remove the last dropdown?")) {
+      body.removeChild(body.lastElementChild);
+    }
+  }
+
+  function createSection(caption) {
+    const section = document.createElement('div');
+    section.className = 'section';
+
+    const header = document.createElement('button');
+    header.className = 'header';
+    header.setAttribute('aria-expanded', 'false');
+
+    const plus = document.createElement('span');
+    plus.className = 'plus';
+    plus.textContent = '+';
+
+    const title = document.createElement('span');
+    title.textContent = caption;
+    makeCaptionEditable(title);
+
+    header.appendChild(plus);
+    header.appendChild(title);
+
+    const content = document.createElement('div');
+    content.className = 'content';
+
+    const topTitle = document.createElement('div');
+    topTitle.className = 'table-title';
+    topTitle.textContent = 'Jaira';
+    const top = buildEditableTable(1, 1, 'table-top');
+
+    const bottomTitle = document.createElement('div');
+    bottomTitle.className = 'table-title';
+    bottomTitle.textContent = 'Kaira';
+    const bottom = buildEditableTable(1, 1, 'table-bottom');
+
+    content.appendChild(topTitle);
+    content.appendChild(top.toolbar);
+    content.appendChild(top.container);
+    content.appendChild(top.graphWrap);
+
+    const hr = document.createElement('hr');
+    content.appendChild(hr);
+
+    content.appendChild(bottomTitle);
+    content.appendChild(bottom.toolbar);
+    content.appendChild(bottom.container);
+    content.appendChild(bottom.graphWrap);
+
+    header.addEventListener('click', (e) => {
+      if (e.target.isContentEditable) return;
+      section.toggleAttribute('open');
+      header.setAttribute('aria-expanded', section.hasAttribute('open'));
+    });
+
+    section.appendChild(header);
+    section.appendChild(content);
+    return section;
+  }
+
+  function buildEditableTable(rows, cols, extraClass) {
+    const container = document.createElement('div');
+    container.className = 'table-container';
+
+    const table = document.createElement('table');
+    if (extraClass) table.classList.add(extraClass);
+
+    for (let r = 0; r < rows; r++) {
+      const tr = document.createElement('tr');
+      for (let c = 0; c < cols; c++) {
+        const td = document.createElement('td');
+        td.contentEditable = "true";
+        tr.appendChild(td);
+      }
+      table.appendChild(tr);
+    }
+
+    createOrRefreshDateRow(table);
+
+    const toolbar = document.createElement('div');
+    toolbar.className = 'table-toolbar';
+
+    const addColBtn = document.createElement('button');
+    addColBtn.className = 'mini-btn';
+    addColBtn.textContent = '+ Column';
+    addColBtn.addEventListener('click', () => addColumn(table));
+
+    const addRowBtn = document.createElement('button');
+    addRowBtn.className = 'mini-btn';
+    addRowBtn.textContent = '+ Row';
+    addRowBtn.addEventListener('click', () => addRow(table));
+
+    const delColBtn = document.createElement('button');
+    delColBtn.className = 'mini-btn';
+    delColBtn.textContent = '- Column';
+    delColBtn.addEventListener('click', () => removeColumn(table));
+
+    const delRowBtn = document.createElement('button');
+    delRowBtn.className = 'mini-btn';
+    delRowBtn.textContent = '- Row';
+    delRowBtn.addEventListener('click', () => removeRow(table));
+
+    const graphBtn = document.createElement('button');
+    graphBtn.className = 'graph-btn';
+    graphBtn.textContent = '📈 Show / Hide Graph';
+    const graphWrap = document.createElement('div');
+    graphWrap.className = 'graph-wrap';
+    const canvas = document.createElement('canvas');
+    graphWrap.appendChild(canvas);
+
+    toolbar.appendChild(addColBtn);
+    toolbar.appendChild(addRowBtn);
+    toolbar.appendChild(delColBtn);
+    toolbar.appendChild(delRowBtn);
+    toolbar.appendChild(graphBtn);
+
+    graphBtn.addEventListener('click', () => toggleGraph(table, canvas, graphWrap));
+
+    container.appendChild(table);
+
+    return { container, table, toolbar, graphWrap };
+  }
+
+  function updateTableScroll(table) {
+    if (table.rows[0].cells.length > 10) {
+      table.classList.add('wide');
+    } else {
+      table.classList.remove('wide');
+    }
+  }
+
+  function stampNow(e) {
+    const d = new Date();
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth() + 1).padStart(2,'0');
+    const yy = String(d.getFullYear()).slice(2);
+    e.target.textContent = `${yy}-${mm}-${dd}`;
+  }
+
+  function createOrRefreshDateRow(table) {
+    const cols = table.rows[0]?.cells.length || 1;
+    let dateRow = table.querySelector('.date-row');
+    if (!dateRow) {
+      dateRow = document.createElement('tr');
+      dateRow.className = 'date-row';
+      for (let i = 0; i < cols; i++) {
+        const td = document.createElement('td');
+        td.addEventListener('click', stampNow);
+        dateRow.appendChild(td);
+      }
+      table.appendChild(dateRow);
+    }
+    updateTableScroll(table);
+  }
+
+  function addColumn(table) {
+    for (let row of table.rows) {
+      const td = document.createElement('td');
+      if (row.classList.contains('date-row')) {
+        td.addEventListener('click', stampNow);
+      } else {
+        td.contentEditable = "true";
+      }
+      row.appendChild(td);
+    }
+    updateTableScroll(table);
+  }
+
+  function removeColumn(table) {
+    for (let row of table.rows) {
+      if (row.cells.length > 1) row.deleteCell(-1);
+    }
+    updateTableScroll(table);
+  }
+
+  function addRow(table) {
+    const rows = table.querySelectorAll('tr');
+    const cols = rows[0]?.cells.length || 1;
+    const newRow = document.createElement('tr');
+    for (let i = 0; i < cols; i++) {
+      const td = document.createElement('td');
+      td.contentEditable = "true";
+      newRow.appendChild(td);
+    }
+    table.insertBefore(newRow, table.querySelector('.date-row'));
+  }
+
+  function removeRow(table) {
+    const rows = table.querySelectorAll('tr');
+    if (rows.length > 2) table.removeChild(rows[rows.length - 2]);
+  }
+
+  function toggleGraph(table, canvas, graphWrap) {
+    if (graphWrap.style.display === 'block') {
+      graphWrap.style.display = 'none';
+      return;
+    }
+    graphWrap.style.display = 'block';
+
+    const labels = [...table.rows[0].cells].map((_, i) => i + 1);
+    const datasets = [];
+    const rows = table.querySelectorAll('tr:not(.date-row)');
+    rows.forEach((row, rIdx) => {
+      const data = [...row.cells].map(td => parseFloat(td.textContent) || 0);
+      datasets.push({
+        label: `Row ${rIdx + 1}`,
+        data,
+        borderColor: `hsl(${rIdx * 50},70%,50%)`,
+        fill: false
+      });
+    });
+
+    new Chart(canvas, {
+      type: 'line',
+      data: { labels, datasets }
+    });
+  }
+
+  function makeCaptionEditable(el) {
+    el.addEventListener('dblclick', () => {
+      el.contentEditable = true;
+      el.focus();
+    });
+    el.addEventListener('blur', () => {
+      el.contentEditable = false;
+    });
+  }
+})();
+</script>
+</body>
+</html>
