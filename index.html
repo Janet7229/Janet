@@ -121,21 +121,21 @@
         let app, database;
 
         try {
-            // --- FIREBASE SETUP ---
+            // --- FIREBASE SETUP (NEW PROJECT) ---
             const firebaseConfig = {
-                apiKey: "AIzaSyD_5YgdpDfpa0dJtcfkUii_UjCKO9oF4J0",
-                authDomain: "shamankingdata.firebaseapp.com",
-                projectId: "shamankingdata",
-                storageBucket: "shamankingdata.firebasestorage.app",
-                messagingSenderId: "757444066890",
-                appId: "1:757444066890:web:e4f9d41e2905e588d930b3",
-                databaseURL: "https://shamankingdata-default-rtdb.firebaseio.com/"
+                apiKey: "AIzaSyCiL87s1Bs9MlXRdDMdJbjwegQwAuGOcMw",
+                authDomain: "jairakaira-cecb2.firebaseapp.com",
+                projectId: "jairakaira-cecb2",
+                storageBucket: "jairakaira-cecb2.firebasestorage.app",
+                messagingSenderId: "873717861801",
+                appId: "1:873717861801:web:a0f1108fbbe6a286a388b8",
+                databaseURL: "https://jairakaira-cecb2-default-rtdb.firebaseio.com/"
             };
             
             // Initialize Firebase
             app = initializeApp(firebaseConfig);
             database = getDatabase(app);
-            console.log("Firebase initialized successfully.");
+            console.log("Firebase initialized successfully with new project.");
 
         } catch (error) {
             console.error("CRITICAL: Firebase initialization failed.", error);
@@ -193,9 +193,11 @@
                 console.log("Connection to database successful. Loading data...");
                 loadStateFromFirebase();
               } else {
-                console.log("Connection to database failed or disconnected.");
-                zonesRoot.innerHTML = `<p style="color: orange; text-align: center;">Warning: Could not establish a real-time connection to the database. Data may not save or load correctly.</p>`;
+                console.log("Connection to database may have failed or is disconnected.");
               }
+            }, (error) => {
+                console.error("Database connection listener failed:", error);
+                zonesRoot.innerHTML = `<p style="color: orange; text-align: center;">Warning: Could not establish a real-time connection to the database. Data may not save or load correctly.</p>`;
             });
         }
       
@@ -444,7 +446,7 @@
       
           const graphBtn = document.createElement('button');
           graphBtn.className = 'graph-btn';
-          graphBtn.textContent = '�';
+          graphBtn.textContent = '📈';
           const graphWrap = document.createElement('div');
           graphWrap.className = 'graph-wrap';
           const canvas = document.createElement('canvas');
@@ -654,4 +656,3 @@
 
 </body>
 </html>
-�
