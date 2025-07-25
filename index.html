@@ -103,24 +103,26 @@
 
     <div id="zones"></div>
 
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
     (function () {
       // --- FIREBASE SETUP ---
-     const firebaseConfig = {
-  apiKey: "AIzaSyD_5YgdpDfpa0dJtcfkUii_UjCKO9oF4J0",
-  authDomain: "shamankingdata.firebaseapp.com",
-  projectId: "shamankingdata",
-  storageBucket: "shamankingdata.firebasestorage.app",
-  messagingSenderId: "757444066890",
-  appId: "1:757444066890:web:e4f9d41e2905e588d930b3",
-  // 👉 Make sure this line exists
-  databaseURL: "https://shamankingdata-default-rtdb.firebaseio.com/"
-};
+      // This configuration object MUST include the databaseURL.
+      const firebaseConfig = {
+        apiKey: "AIzaSyD_5YgdpDfpa0dJtcfkUii_UjCKO9oF4J0",
+        authDomain: "shamankingdata.firebaseapp.com",
+        projectId: "shamankingdata",
+        storageBucket: "shamankingdata.firebasestorage.app",
+        messagingSenderId: "757444066890",
+        appId: "1:757444066890:web:e4f9d41e2905e588d930b3",
+        databaseURL: "https://shamankingdata-default-rtdb.firebaseio.com/"
+      };
       
       // Initialize Firebase
       firebase.initializeApp(firebaseConfig);
@@ -323,8 +325,8 @@
         const content = document.createElement('div');
         content.className = 'content';
     
-        const jairaData = data ? data.jairaTable : { dataRows: [['']], dateRow: [] };
-        const kairaData = data ? data.kairaTable : { dataRows: [['']], dateRow: [] };
+        const jairaData = data && data.jairaTable ? data.jairaTable : { dataRows: [['']], dateRow: [] };
+        const kairaData = data && data.kairaTable ? data.kairaTable : { dataRows: [['']], dateRow: [] };
         
         const topTitle = document.createElement('div');
         topTitle.className = 'table-title';
@@ -361,7 +363,7 @@
         const table = document.createElement('table');
         if (extraClass) table.classList.add(extraClass);
         
-        const rows = (tableData.dataRows && tableData.dataRows.length > 0) ? tableData.dataRows : [['']];
+        const rows = (tableData && tableData.dataRows && tableData.dataRows.length > 0) ? tableData.dataRows : [['']];
         
         rows.forEach(rowData => {
           const tr = document.createElement('tr');
@@ -376,7 +378,7 @@
           table.appendChild(tr);
         });
     
-        createOrRefreshDateRow(table, tableData.dateRow);
+        createOrRefreshDateRow(table, tableData ? tableData.dateRow : []);
         
         const toolbar = document.createElement('div');
         toolbar.className = 'table-toolbar';
@@ -463,8 +465,7 @@
             dateRow.deleteCell(-1);
         }
 
-        // Populate with data
-        if(dateData.length > 0) {
+        if(dateData && dateData.length > 0) {
             [...dateRow.cells].forEach((td, i) => {
                 td.textContent = dateData[i] || '';
             });
@@ -556,11 +557,10 @@
             return isNaN(v) ? null : v;
           });
 
-          // Trim nulls from start and end of data for a cleaner graph line
           let firstValIndex = dataPoints.findIndex(p => p !== null);
-          let lastValIndex = dataPoints.findLastIndex(p => p !== null);
+          let lastValIndex = dataPoints.map(p => p !== null).lastIndexOf(true);
 
-          if(firstValIndex === -1) return; // Skip rows with no data
+          if(firstValIndex === -1) return;
 
           const finalData = dataPoints.map((p, i) => (i >= firstValIndex && i <= lastValIndex) ? p : null);
           
