@@ -113,7 +113,7 @@
     <script type="module">
       // --- FIREBASE V9 MODULAR SDK IMPORTS ---
       import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-      import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+      import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 
       // Wrap all logic in a DOMContentLoaded event listener
       document.addEventListener('DOMContentLoaded', () => {
@@ -139,11 +139,9 @@
 
         } catch (error) {
             console.error("CRITICAL: Firebase initialization failed.", error);
-            // If Firebase fails to init, we can't proceed.
-            // You could show a user-friendly error message on the page here.
             const zonesRootError = document.getElementById('zones');
             zonesRootError.innerHTML = `<p style="color: red; text-align: center;">Error: Could not connect to the database. Please check the console for details.</p>`;
-            return; // Stop execution if Firebase fails
+            return;
         }
     
         // --- DOM ELEMENTS ---
@@ -183,8 +181,22 @@
             }
           }).catch((err) => {
               console.error("Error loading data from Firebase:", err);
-              renderInitialContainers(3); // Fallback
+              renderInitialContainers(3);
           });
+        }
+        
+        // --- REAL-TIME CONNECTION TEST ---
+        function checkDatabaseConnection() {
+            const connectedRef = ref(database, ".info/connected");
+            onValue(connectedRef, (snap) => {
+              if (snap.val() === true) {
+                console.log("Connection to database successful. Loading data...");
+                loadStateFromFirebase();
+              } else {
+                console.log("Connection to database failed or disconnected.");
+                zonesRoot.innerHTML = `<p style="color: orange; text-align: center;">Warning: Could not establish a real-time connection to the database. Data may not save or load correctly.</p>`;
+              }
+            });
         }
       
         // --- STATE SCRAPING & RENDERING ---
@@ -432,7 +444,7 @@
       
           const graphBtn = document.createElement('button');
           graphBtn.className = 'graph-btn';
-          graphBtn.textContent = '📈';
+          graphBtn.textContent = '�';
           const graphWrap = document.createElement('div');
           graphWrap.className = 'graph-wrap';
           const canvas = document.createElement('canvas');
@@ -634,10 +646,12 @@
         }
       
         // --- INITIALIZE APP ---
-        loadStateFromFirebase();
+        checkDatabaseConnection();
+      
       });
     
     </script>
 
 </body>
 </html>
+�
