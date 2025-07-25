@@ -3,174 +3,121 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Dynamic Containers with Scrollable Tables</title>
+<title>Dynamic Containers</title>
 <style>
-  body {
-    font-family: "Calibri", "Helvetica Neue", Arial, sans-serif;
-    max-width: 900px;
-    margin: 2rem auto;
-    background: #fff8f0;
-    color: #333;
+  body{
+    font-family:"Calibri","Helvetica Neue",Arial,sans-serif;
+    max-width:900px;margin:2rem auto;background:#fff8f0;color:#333;
   }
-  h1 {
-    text-align: center;
-    font-size: 2rem;
-    margin-bottom: 1rem;
-    color: #ff6f61;
-    text-shadow: 1px 1px 0px #fff;
+  h1{
+    text-align:center;font-size:2rem;margin-bottom:1rem;color:#ff6f61;
   }
 
-  .container-controls {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 15px;
+  /* Container controls */
+  .container-controls{
+    display:flex;justify-content:center;gap:10px;margin-bottom:15px;
   }
-  .control-btn {
-    padding: 8px 12px;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    color: white;
-    cursor: pointer;
-    transition: 0.2s;
+  .control-btn{
+    padding:6px 12px;border:none;border-radius:6px;font-size:18px;color:#fff;
+    cursor:pointer;transition:.2s;width:40px;height:40px;text-align:center;
   }
-  .control-btn.add { background: #a5d6a7; }
-  .control-btn.remove { background: #ef9a9a; }
-  .control-btn:hover { transform: scale(1.05); }
+  .control-btn.add{background:#a5d6a7;}
+  .control-btn.remove{background:#ef9a9a;}
+  .control-btn:hover{transform:scale(1.05);}
 
-  .zone {
-    border: 2px solid #ffb347;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    background: #fff4e6;
+  /* Zones (Containers) */
+  .zone{
+    border:2px solid #ffb347;border-radius:10px;margin-bottom:15px;overflow:hidden;
+    box-shadow:0 2px 6px rgba(0,0,0,.1);background:#fff4e6;
   }
-  .zone-header {
-    display: flex; align-items: center; gap: 8px;
-    padding: 12px 14px; background: #ffe0b2; cursor: pointer;
-    font-weight: bold; font-size: 1.1rem;
+  .zone-header{
+    display:flex;align-items:center;gap:8px;padding:12px 14px;background:#ffe0b2;
+    cursor:pointer;font-weight:bold;font-size:1.1rem;
   }
-  .zone .plus {
-    width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
-    border: 1px solid #ff9800; border-radius: 4px; font-weight: bold; transition: transform .15s;
-    background: #ffcc80; color: #333;
+  .zone .plus{
+    width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;
+    border:1px solid #ff9800;border-radius:4px;font-weight:bold;background:#ffcc80;color:#333;
+    transition:transform .15s;
   }
-  .zone[open] .zone-header .plus { transform: rotate(45deg); }
-  .zone-content {
-    display: none; padding: 12px 14px 16px; background: #fffef8;
-  }
-  .zone[open] .zone-content { display: block; }
+  .zone[open] .zone-header .plus{transform:rotate(45deg);}
+  .zone-content{display:none;padding:12px 14px 16px;background:#fffef8;}
+  .zone[open] .zone-content{display:block;}
 
-  .mini-btn, .add-btn, .graph-btn {
-    padding: 6px 10px;
-    font-size: 13px;
-    cursor: pointer;
-    border: none;
-    border-radius: 6px;
-    transition: transform 0.1s, background 0.2s;
-    color: white;
+  /* Buttons inside sections/tables */
+  .mini-btn,.add-btn,.graph-btn{
+    padding:6px 10px;font-size:13px;cursor:pointer;border:none;border-radius:6px;
+    transition:transform .1s,background .2s;color:#fff;
   }
-  .add-btn { background: #f48fb1; }
-  .mini-btn:nth-child(1) { background: #80cbc4; }
-  .mini-btn:nth-child(2) { background: #90caf9; }
-  .mini-btn:nth-child(3) { background: #f48fb1; }
-  .mini-btn:nth-child(4) { background: #ffcc80; }
-  .graph-btn { background: #b39ddb; }
-  .mini-btn:hover, .add-btn:hover, .graph-btn:hover { transform: scale(1.05); }
+  .add-btn{background:#f48fb1;width:40px;height:40px;font-size:18px;}
+  .mini-btn.add-col{background:#80cbc4;} /* + Column */
+  .mini-btn.add-row{background:#90caf9;} /* + Row */
+  .mini-btn.del-col{background:#f48fb1;} /* - Column */
+  .mini-btn.del-row{background:#ffcc80;} /* - Row */
+  .graph-btn{background:#b39ddb;width:auto;height:auto;padding:6px 10px;font-size:13px;}
+  .mini-btn:hover,.add-btn:hover,.graph-btn:hover{transform:scale(1.05);}
 
-  .dropdown-controls,
-  .table-toolbar {
-    display: flex; gap: .5rem; margin: 8px 0; flex-wrap: wrap;
+  .dropdown-controls,.table-toolbar{
+    display:flex;gap:.5rem;margin:8px 0;flex-wrap:wrap;
   }
 
-  .section {
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    margin-bottom: 10px;
-    overflow: hidden;
+  /* Sections (dropdowns inside containers) */
+  .section{
+    border:1px solid #ddd;border-radius:6px;margin-bottom:10px;overflow:hidden;
   }
-  .header {
-    display: flex; align-items: center; gap: 8px;
-    padding: 12px 14px;
-    background: #ffe0b2;
-    cursor: pointer;
-    border: none;
-    font-weight: bold;
+  .header{
+    display:flex;align-items:center;gap:8px;padding:12px 14px;background:#ffe0b2;
+    cursor:pointer;border:none;font-weight:bold;width:100%;
   }
-  .header .plus {
-    width: 20px; height: 20px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #ff9800;
-    border-radius: 4px;
-    font-weight: bold;
-    background: #ffcc80;
+  .header .plus{
+    width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;
+    border:1px solid #ff9800;border-radius:4px;background:#ffcc80;font-weight:bold;
   }
-  .content { padding: 10px 14px 14px; display: none; }
-  .section[open] .content { display: block; }
+  .content{padding:10px 14px 14px;display:none;}
+  .section[open] .content{display:block;}
 
-  .table-title {
-    font-size: 1rem;
-    font-weight: bold;
-    margin-top: 8px;
-    margin-bottom: 4px;
-    text-align: center;
-    color: #4a148c;
+  /* Table titles */
+  .table-title{
+    font-size:1rem;font-weight:bold;margin:8px 0 4px;text-align:center;color:#4a148c;
   }
 
-  .table-container {
-    overflow-x: auto;
-    border: 2px solid #ccc;
-    border-radius: 5px;
-    margin-top: 5px;
+  /* Scroll container for tables */
+  .table-container{
+    overflow-x:auto;border:2px solid #ccc;border-radius:5px;margin-top:5px;
   }
 
-  table {
-    border-collapse: collapse;
-    width: 100%;
+  /* Tables */
+  table{
+    border-collapse:collapse;width:100%;
   }
-  table.wide {
-    min-width: 1000px; /* Force horizontal scroll if >10 columns */
-  }
-  table, th, td {
-    border: 3px solid #000;
-  }
-  th, td {
-    padding: 6px;
-    text-align: center;
-    font-size: 14px;
-  }
-  td[contenteditable="true"] { cursor: text; }
-  .table-top td, .table-top th { background: #ffd6e7; }
-  .table-bottom td, .table-bottom th { background: #e6d6ff; }
+  table.wide{min-width:1000px;} /* force horizontal scroll if >10 cols */
+  table,th,td{border:3px solid #000;}
+  th,td{padding:6px;text-align:center;font-size:14px;}
+  td[contenteditable="true"]{cursor:text;}
+  .table-top td,.table-top th{background:#ffd6e7;}     /* light pink */
+  .table-bottom td,.table-bottom th{background:#e6d6ff;}/* light purple */
 
-  .date-row td {
-    background: #ffcccc !important;
-    cursor: pointer;
-    user-select: none;
-    font-size: 7px;
+  /* Red date row */
+  .date-row td{
+    background:#ffcccc!important;cursor:pointer;user-select:none;font-size:7px;
   }
 
-  .graph-wrap {
-    margin-top: 8px;
-    padding: 8px;
-    background: #ffffff;
-    border: 2px dashed #b39ddb;
-    border-radius: 8px;
-    display: none;
+  .graph-wrap{
+    margin-top:8px;padding:8px;background:#fff;border:2px dashed #b39ddb;border-radius:8px;
+    display:none;
+  }
+
+  .editing{
+    outline:2px dashed #ff6f61;background:#fff5ee;
   }
 </style>
 </head>
 <body>
 
-<h1>Dynamic Containers</h1>
+<h1>Jaira Kaira Swimmers</h1>
 
 <div class="container-controls">
-  <button class="control-btn add">+ Container</button>
-  <button class="control-btn remove">- Container</button>
+  <button class="control-btn add">+</button>
+  <button class="control-btn remove">-</button>
 </div>
 
 <div id="zones"></div>
@@ -206,6 +153,7 @@
     }
   }
 
+  /* ---------- Container (zone) ---------- */
   function createZone(index) {
     const zone = document.createElement('div');
     zone.className = 'zone';
@@ -232,13 +180,13 @@
 
     const addDropdownBtn = document.createElement('button');
     addDropdownBtn.className = 'add-btn';
-    addDropdownBtn.textContent = '+ Dropdown';
+    addDropdownBtn.textContent = '+';
     addDropdownBtn.addEventListener('click', () => addOneDropdown(content));
 
     const removeDropdownBtn = document.createElement('button');
     removeDropdownBtn.className = 'add-btn';
     removeDropdownBtn.style.background = '#ef9a9a';
-    removeDropdownBtn.textContent = '- Dropdown';
+    removeDropdownBtn.textContent = '-';
     removeDropdownBtn.addEventListener('click', () => removeOneDropdown(content));
 
     ddControls.appendChild(addDropdownBtn);
@@ -269,12 +217,14 @@
 
   function removeOneDropdown(containerEl) {
     const body = containerEl.querySelector('.zone-body');
-    if (!body.lastElementChild) return;
+    const last = body.lastElementChild;
+    if (!last) return;
     if (confirm("Are you sure you want to remove the last dropdown?")) {
-      body.removeChild(body.lastElementChild);
+      body.removeChild(last);
     }
   }
 
+  /* ---------- Section (dropdown) ---------- */
   function createSection(caption) {
     const section = document.createElement('div');
     section.className = 'section';
@@ -297,6 +247,7 @@
     const content = document.createElement('div');
     content.className = 'content';
 
+    // two independent tables
     const topTitle = document.createElement('div');
     topTitle.className = 'table-title';
     topTitle.textContent = 'Jaira';
@@ -331,6 +282,7 @@
     return section;
   }
 
+  /* ---------- Build one editable table block ---------- */
   function buildEditableTable(rows, cols, extraClass) {
     const container = document.createElement('div');
     container.className = 'table-container';
@@ -354,28 +306,45 @@
     toolbar.className = 'table-toolbar';
 
     const addColBtn = document.createElement('button');
-    addColBtn.className = 'mini-btn';
+    addColBtn.className = 'mini-btn add-col';
     addColBtn.textContent = '+ Column';
-    addColBtn.addEventListener('click', () => addColumn(table));
+    addColBtn.addEventListener('click', () => {
+      addColumn(table);
+      createOrRefreshDateRow(table);
+    });
 
     const addRowBtn = document.createElement('button');
-    addRowBtn.className = 'mini-btn';
+    addRowBtn.className = 'mini-btn add-row';
     addRowBtn.textContent = '+ Row';
-    addRowBtn.addEventListener('click', () => addRow(table));
+    addRowBtn.addEventListener('click', () => {
+      addRow(table);
+      createOrRefreshDateRow(table);
+    });
 
     const delColBtn = document.createElement('button');
-    delColBtn.className = 'mini-btn';
+    delColBtn.className = 'mini-btn del-col';
     delColBtn.textContent = '- Column';
-    delColBtn.addEventListener('click', () => removeColumn(table));
+    delColBtn.addEventListener('click', () => {
+      if (confirm("Delete last column?")) {
+        removeColumn(table);
+        createOrRefreshDateRow(table);
+      }
+    });
 
     const delRowBtn = document.createElement('button');
-    delRowBtn.className = 'mini-btn';
+    delRowBtn.className = 'mini-btn del-row';
     delRowBtn.textContent = '- Row';
-    delRowBtn.addEventListener('click', () => removeRow(table));
+    delRowBtn.addEventListener('click', () => {
+      if (confirm("Delete last row?")) {
+        removeRow(table);
+        createOrRefreshDateRow(table);
+      }
+    });
 
     const graphBtn = document.createElement('button');
     graphBtn.className = 'graph-btn';
-    graphBtn.textContent = '📈 Show / Hide Graph';
+    graphBtn.textContent = '📈';
+
     const graphWrap = document.createElement('div');
     graphWrap.className = 'graph-wrap';
     const canvas = document.createElement('canvas');
@@ -390,79 +359,121 @@
     graphBtn.addEventListener('click', () => toggleGraph(table, canvas, graphWrap));
 
     container.appendChild(table);
+    updateTableScroll(table);
 
     return { container, table, toolbar, graphWrap };
   }
 
-  function updateTableScroll(table) {
-    if (table.rows[0].cells.length > 10) {
-      table.classList.add('wide');
-    } else {
-      table.classList.remove('wide');
-    }
+  /* ---------- Helpers: DOM/table ---------- */
+  function getTBody(table){
+    return table.tBodies && table.tBodies.length ? table.tBodies[0] : table;
   }
 
+  /* ---------- Helpers: date row ---------- */
   function stampNow(e) {
     const d = new Date();
-    const dd = String(d.getDate()).padStart(2,'0');
     const mm = String(d.getMonth() + 1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
     const yy = String(d.getFullYear()).slice(2);
-    e.target.textContent = `${yy}-${mm}-${dd}`;
+    e.target.textContent = `${mm}/${dd}/${yy}`;
+  }
+
+  function getDateRow(table) {
+    return [...table.rows].find(r => r.classList.contains('date-row')) || null;
+  }
+
+  function getColumnCount(table) {
+    const normalRows = [...table.rows].filter(r => !r.classList.contains('date-row'));
+    if (normalRows.length) return normalRows[0].cells.length;
+    const dr = getDateRow(table);
+    return dr ? dr.cells.length : 0;
   }
 
   function createOrRefreshDateRow(table) {
-    const cols = table.rows[0]?.cells.length || 1;
-    let dateRow = table.querySelector('.date-row');
+    const cols = getColumnCount(table) || 1;
+    let dateRow = getDateRow(table);
     if (!dateRow) {
       dateRow = document.createElement('tr');
-      dateRow.className = 'date-row';
+      dateRow.classList.add('date-row');
       for (let i = 0; i < cols; i++) {
         const td = document.createElement('td');
+        td.contentEditable = "false";
         td.addEventListener('click', stampNow);
         dateRow.appendChild(td);
       }
-      table.appendChild(dateRow);
+      getTBody(table).appendChild(dateRow);
+    } else {
+      const diff = cols - dateRow.cells.length;
+      if (diff > 0) {
+        for (let i = 0; i < diff; i++) {
+          const td = document.createElement('td');
+          td.contentEditable = "false";
+          td.addEventListener('click', stampNow);
+          dateRow.appendChild(td);
+        }
+      } else if (diff < 0) {
+        for (let i = 0; i < -diff; i++) {
+          dateRow.deleteCell(-1);
+        }
+      }
     }
-    updateTableScroll(table);
+  }
+
+  /* ---------- Table operations ---------- */
+  function updateTableScroll(table) {
+    const firstNormal = [...table.rows].find(r => !r.classList.contains('date-row'));
+    const cols = firstNormal ? firstNormal.cells.length : 0;
+    if (cols > 10) table.classList.add('wide');
+    else table.classList.remove('wide');
   }
 
   function addColumn(table) {
-    for (let row of table.rows) {
+    const dateRow = getDateRow(table);
+    [...table.rows].forEach(tr => {
       const td = document.createElement('td');
-      if (row.classList.contains('date-row')) {
+      if (tr === dateRow) {
+        td.contentEditable = "false";
         td.addEventListener('click', stampNow);
       } else {
         td.contentEditable = "true";
       }
-      row.appendChild(td);
-    }
+      tr.appendChild(td);
+    });
     updateTableScroll(table);
   }
 
   function removeColumn(table) {
-    for (let row of table.rows) {
-      if (row.cells.length > 1) row.deleteCell(-1);
-    }
+    const firstNormal = [...table.rows].find(r => !r.classList.contains('date-row'));
+    if (!firstNormal || firstNormal.cells.length <= 1) return;
+    [...table.rows].forEach(tr => tr.deleteCell(-1));
     updateTableScroll(table);
   }
 
   function addRow(table) {
-    const rows = table.querySelectorAll('tr');
-    const cols = rows[0]?.cells.length || 1;
-    const newRow = document.createElement('tr');
-    for (let i = 0; i < cols; i++) {
+    const dateRow = getDateRow(table);
+    const cols = getColumnCount(table) || 1;
+    const tr = document.createElement('tr');
+    for (let c = 0; c < cols; c++) {
       const td = document.createElement('td');
       td.contentEditable = "true";
-      newRow.appendChild(td);
+      tr.appendChild(td);
     }
-    table.insertBefore(newRow, table.querySelector('.date-row'));
+    if (dateRow && dateRow.parentNode) {
+      dateRow.parentNode.insertBefore(tr, dateRow);
+    } else {
+      getTBody(table).appendChild(tr);
+    }
+    updateTableScroll(table);
   }
 
   function removeRow(table) {
-    const rows = table.querySelectorAll('tr');
-    if (rows.length > 2) table.removeChild(rows[rows.length - 2]);
+    const normals = [...table.rows].filter(r => !r.classList.contains('date-row'));
+    if (normals.length <= 1) return;
+    normals[normals.length - 1].remove();
+    updateTableScroll(table);
   }
 
+  /* ---------- Graph (skip blank cols, break at blanks, stop at last value) ---------- */
   function toggleGraph(table, canvas, graphWrap) {
     if (graphWrap.style.display === 'block') {
       graphWrap.style.display = 'none';
@@ -470,35 +481,135 @@
     }
     graphWrap.style.display = 'block';
 
-    const labels = [...table.rows[0].cells].map((_, i) => i + 1);
+    const normalRows = [...table.rows].filter(r => !r.classList.contains('date-row'));
+    if (!normalRows.length) return;
+
+    const colCount = normalRows[0].cells.length;
+
+    // Find last column that has any numeric value
+    let lastNonEmptyCol = -1;
+    for (let c = 0; c < colCount; c++) {
+      for (let r = 0; r < normalRows.length; r++) {
+        const val = parseFloat(normalRows[r].cells[c].textContent);
+        if (!isNaN(val)) {
+          lastNonEmptyCol = c;
+          break;
+        }
+      }
+    }
+    if (lastNonEmptyCol === -1) return;
+
+    // Keep only columns with at least one number up to lastNonEmptyCol
+    const validCols = [];
+    for (let c = 0; c <= lastNonEmptyCol; c++) {
+      let hasNumber = false;
+      for (let r = 0; r < normalRows.length; r++) {
+        const v = parseFloat(normalRows[r].cells[c].textContent);
+        if (!isNaN(v)) { hasNumber = true; break; }
+      }
+      if (hasNumber) validCols.push(c);
+    }
+    if (!validCols.length) return;
+
+    const labels = validCols.map(c => `Col ${c + 1}`);
     const datasets = [];
-    const rows = table.querySelectorAll('tr:not(.date-row)');
-    rows.forEach((row, rIdx) => {
-      const data = [...row.cells].map(td => parseFloat(td.textContent) || 0);
+
+    normalRows.forEach((row, rIdx) => {
+      const raw = validCols.map(c => {
+        const v = parseFloat(row.cells[c].textContent);
+        return isNaN(v) ? null : v;
+      });
+
+      const numericIdxs = raw.map((v,i)=>v===null?-1:i).filter(i=>i!==-1);
+      if (!numericIdxs.length) return;
+      const first = numericIdxs[0];
+      const last  = numericIdxs[numericIdxs.length-1];
+
+      const data = raw.map((v,i)=> (i<first || i>last)? null : v);
+
       datasets.push({
         label: `Row ${rIdx + 1}`,
         data,
-        borderColor: `hsl(${rIdx * 50},70%,50%)`,
-        fill: false
+        borderColor: `hsl(${(rIdx * 60) % 360}, 70%, 50%)`,
+        backgroundColor: `hsla(${(rIdx * 60) % 360}, 70%, 50%, .15)`,
+        fill: false,
+        spanGaps: false,   // break at blanks
+        tension: 0.2,
+        pointRadius: 3,
+        pointHoverRadius: 5
       });
     });
 
-    new Chart(canvas, {
+    // Destroy existing chart if any
+    if (canvas._chart) canvas._chart.destroy();
+
+    canvas._chart = new Chart(canvas.getContext('2d'), {
       type: 'line',
-      data: { labels, datasets }
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+          x: { title: { display: true, text: 'Columns' } },
+          y: { title: { display: true, text: 'Value' } }
+        }
+      }
     });
   }
 
-  function makeCaptionEditable(el) {
-    el.addEventListener('dblclick', () => {
-      el.contentEditable = true;
+  /* ---------- Editable captions ---------- */
+  function makeCaptionEditable(spanEl) {
+    spanEl.style.userSelect = 'text';
+    spanEl.style.cursor = 'text';
+    spanEl.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      enableEdit(spanEl);
+    });
+    spanEl.setAttribute('tabindex', '0');
+    spanEl.addEventListener('keydown', (e) => {
+      if (e.key === 'F2') {
+        e.preventDefault();
+        enableEdit(spanEl);
+      }
+    });
+
+    function enableEdit(el) {
+      const original = el.textContent;
+      el.contentEditable = 'true';
+      el.classList.add('editing');
       el.focus();
-    });
-    el.addEventListener('blur', () => {
-      el.contentEditable = false;
-    });
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+
+      function commit() {
+        el.contentEditable = 'false';
+        el.classList.remove('editing');
+        cleanup();
+      }
+      function cancel() {
+        el.textContent = original;
+        el.contentEditable = 'false';
+        el.classList.remove('editing');
+        cleanup();
+      }
+      function onKey(e) {
+        if (e.key === 'Enter') { e.preventDefault(); commit(); }
+        else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+      }
+      function onBlur() { commit(); }
+      function cleanup() {
+        el.removeEventListener('keydown', onKey);
+        el.removeEventListener('blur', onBlur);
+      }
+      el.addEventListener('keydown', onKey);
+      el.addEventListener('blur', onBlur);
+    }
   }
 })();
 </script>
+
 </body>
 </html>
