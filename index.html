@@ -409,7 +409,9 @@
               const td = document.createElement('td');
               td.contentEditable = "true";
               td.textContent = cellData;
+              // SAVE ON BLUR AND KEYUP
               td.addEventListener('blur', debouncedSave);
+              td.addEventListener('keyup', debouncedSave);
               tr.appendChild(td);
             });
             table.appendChild(tr);
@@ -522,6 +524,7 @@
             } else {
               td.contentEditable = "true";
               td.addEventListener('blur', debouncedSave);
+              td.addEventListener('keyup', debouncedSave);
             }
           });
           updateTableScroll(table);
@@ -541,6 +544,7 @@
             const td = newRow.insertCell();
             td.contentEditable = "true";
             td.addEventListener('blur', debouncedSave);
+            td.addEventListener('keyup', debouncedSave);
           }
         }
       
