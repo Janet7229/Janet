@@ -13,11 +13,35 @@
       h1{
         text-align:center;font-size:2rem;margin-bottom:1rem;color:#ff6f61;
       }
-      /* Stopwatch Styles */
-      .stopwatch{
+      /* Top Right Controls Container */
+      .top-right-controls {
         position: absolute;
         top: 10px;
-        left: 10px;
+        right: 10px;
+        z-index: 10;
+        display: flex;
+        gap: 10px;
+      }
+      .tool-container {
+        position: relative;
+      }
+      .tool-toggle-btn {
+        padding: 8px 12px;
+        font-size: 14px;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .stopwatch-toggle-btn { background: #2196F3; }
+      .calc-toggle-btn { background: #b39ddb; }
+
+      /* Stopwatch Styles */
+      .stopwatch{
+        display: none; /* Hidden by default */
+        position: absolute;
+        top: 40px; /* Position below the button */
+        right: 0;
         background: #f0f0f0;
         padding: 10px;
         border-radius: 8px;
@@ -51,8 +75,61 @@
       }
       .reset-btn{ background: #ef9a9a; }
 
+      /* Calculator Styles */
+      .calculator {
+        display: none; /* Hidden by default */
+        position: absolute;
+        top: 40px; /* Position below the button */
+        right: 0;
+        width: 300px;
+        border: 2px solid #333;
+        border-radius: 10px;
+        background: #d3d3d3;
+        padding: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      }
+      .calculator-screen {
+        width: 100%;
+        height: 60px;
+        background: #c9e4c9;
+        border: 2px solid #333;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        padding: 0 10px;
+        font-size: 2rem;
+        text-align: right;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      .calculator-keys {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+      }
+      .calc-btn {
+        padding: 15px 5px;
+        font-size: 1.1rem;
+        border-radius: 5px;
+        border: 1px solid #999;
+        cursor: pointer;
+        background: #f0f0f0;
+        box-shadow: 0 2px #999;
+      }
+      .calc-btn:active {
+        box-shadow: none;
+        transform: translateY(2px);
+      }
+      .calc-btn.operator { background: #ff9800; color: white; }
+      .calc-btn.function { background: #777; color: white; }
+      .calc-btn.clear, .calc-btn.del { background: #ef5350; color: white; }
+      .calc-btn.equals { grid-column: span 2; background: #4caf50; color: white; }
+
+
       .container-controls{
-        display:flex;justify-content:center;gap:10px;margin-bottom:15px;
+        display:flex;
+        justify-content: flex-end; /* Move to right */
+        gap:10px;
+        margin-bottom:15px;
       }
       .control-btn{
         padding:6px 12px;border:none;border-radius:6px;font-size:18px;color:#fff;
@@ -88,8 +165,20 @@
       .mini-btn.del-row{background:#ffcc80;} /* - Row */
       .graph-btn{background:#b39ddb;width:auto;height:auto;padding:6px 10px;font-size:13px;}
       .mini-btn:hover,.add-btn:hover,.graph-btn:hover{transform:scale(1.05);}
-      .dropdown-controls,.table-toolbar{
-        display:flex;gap:.5rem;margin:8px 0;flex-wrap:wrap;
+      
+      .dropdown-controls{
+        display:flex;
+        justify-content: flex-end; /* Move to right */
+        gap:.5rem;
+        margin:8px 0;
+        flex-wrap:wrap;
+      }
+      .table-toolbar {
+        display:flex;
+        justify-content: flex-end; /* Move to right */
+        gap:.5rem;
+        margin:8px 0;
+        flex-wrap:wrap;
       }
       .section{
         border:1px solid #ddd;border-radius:6px;margin-bottom:10px;overflow:hidden;
@@ -135,11 +224,52 @@
     </style>
 </head>
 <body>
-    <div class="stopwatch">
-        <span id="time-display">00:00.00</span>
-        <div>
-            <button id="start-pause-btn" class="stopwatch-btn start-pause-btn">Start</button>
-            <button id="reset-btn" class="stopwatch-btn reset-btn">Reset</button>
+    <div class="top-right-controls">
+        <div class="tool-container">
+            <button class="tool-toggle-btn stopwatch-toggle-btn">Stopwatch</button>
+            <div class="stopwatch">
+                <span id="time-display">00:00.00</span>
+                <div>
+                    <button id="start-pause-btn" class="stopwatch-btn start-pause-btn">Start</button>
+                    <button id="reset-btn" class="stopwatch-btn reset-btn">Reset</button>
+                </div>
+            </div>
+        </div>
+        <div class="tool-container">
+            <button class="tool-toggle-btn calc-toggle-btn">Calculator</button>
+            <div class="calculator">
+                <input type="text" class="calculator-screen" value="" disabled />
+                <div class="calculator-keys">
+                    <button type="button" class="calc-btn function" value="sin">sin</button>
+                    <button type="button" class="calc-btn function" value="cos">cos</button>
+                    <button type="button" class="calc-btn function" value="tan">tan</button>
+                    <button type="button" class="calc-btn del" value="DEL">DEL</button>
+                    <button type="button" class="calc-btn clear" value="AC">AC</button>
+                    
+                    <button type="button" class="calc-btn" value="7">7</button>
+                    <button type="button" class="calc-btn" value="8">8</button>
+                    <button type="button" class="calc-btn" value="9">9</button>
+                    <button type="button" class="calc-btn operator" value="/">&divide;</button>
+                    <button type="button" class="calc-btn function" value="sqrt">&radic;</button>
+
+                    <button type="button" class="calc-btn" value="4">4</button>
+                    <button type="button" class="calc-btn" value="5">5</button>
+                    <button type="button" class="calc-btn" value="6">6</button>
+                    <button type="button" class="calc-btn operator" value="*">&times;</button>
+                    <button type="button" class="calc-btn function" value="^">x^y</button>
+
+                    <button type="button" class="calc-btn" value="1">1</button>
+                    <button type="button" class="calc-btn" value="2">2</button>
+                    <button type="button" class="calc-btn" value="3">3</button>
+                    <button type="button" class="calc-btn operator" value="-">-</button>
+                    <button type="button" class="calc-btn function" value="log">log</button>
+                    
+                    <button type="button" class="calc-btn" value="0">0</button>
+                    <button type="button" class="calc-btn" value=".">.</button>
+                    <button type="button" class="calc-btn operator" value="+">+</button>
+                    <button type="button" class="calc-btn equals" value="=">=</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -197,6 +327,8 @@
         const removeContainerBtn = document.querySelector('.control-btn.remove');
       
         // --- STOPWATCH LOGIC ---
+        const stopwatch = document.querySelector('.stopwatch');
+        const stopwatchToggleBtn = document.querySelector('.stopwatch-toggle-btn');
         const timeDisplay = document.getElementById('time-display');
         const startPauseBtn = document.getElementById('start-pause-btn');
         const resetBtn = document.getElementById('reset-btn');
@@ -208,16 +340,18 @@
         let savedTime = 0;
         let running = false;
 
+        stopwatchToggleBtn.addEventListener('click', () => {
+            stopwatch.style.display = stopwatch.style.display === 'block' ? 'none' : 'block';
+        });
+
         function startPauseTimer() {
             if (!running) {
-                // Start the timer
                 startTime = new Date().getTime();
-                tInterval = setInterval(getShowTime, 10); // Update every 10ms for 2 decimal places
+                tInterval = setInterval(getShowTime, 10);
                 running = true;
                 startPauseBtn.innerHTML = "Pause";
                 startPauseBtn.classList.add("running");
             } else {
-                // Pause the timer
                 clearInterval(tInterval);
                 savedTime = difference;
                 running = false;
@@ -257,6 +391,59 @@
         startPauseBtn.addEventListener('click', startPauseTimer);
         resetBtn.addEventListener('click', resetTimer);
 
+        // --- CALCULATOR LOGIC ---
+        const calculator = document.querySelector('.calculator');
+        const calculatorScreen = document.querySelector('.calculator-screen');
+        const calculatorKeys = document.querySelector('.calculator-keys');
+        const calcToggleBtn = document.querySelector('.calc-toggle-btn');
+
+        calcToggleBtn.addEventListener('click', () => {
+            calculator.style.display = calculator.style.display === 'block' ? 'none' : 'block';
+        });
+
+        calculatorKeys.addEventListener('click', e => {
+            if (!e.target.matches('button')) return;
+
+            const key = e.target;
+            const action = key.value;
+            const displayedNum = calculatorScreen.value;
+
+            if (!isNaN(action) || action === '.') {
+                calculatorScreen.value = displayedNum === '0' ? action : displayedNum + action;
+            } else if (['+', '-', '*', '/'].includes(action)) {
+                calculatorScreen.value = displayedNum + ' ' + action + ' ';
+            } else if (action === 'sin' || action === 'cos' || action === 'tan' || action === 'log' || action === 'sqrt') {
+                try {
+                    let result;
+                    const num = parseFloat(displayedNum);
+                    if (isNaN(num)) return;
+                    switch(action) {
+                        case 'sin': result = Math.sin(num * Math.PI / 180); break; // Degrees to radians
+                        case 'cos': result = Math.cos(num * Math.PI / 180); break; // Degrees to radians
+                        case 'tan': result = Math.tan(num * Math.PI / 180); break; // Degrees to radians
+                        case 'log': result = Math.log10(num); break;
+                        case 'sqrt': result = Math.sqrt(num); break;
+                    }
+                    calculatorScreen.value = result.toFixed(8);
+                } catch {
+                    calculatorScreen.value = 'Error';
+                }
+            } else if (action === '^') {
+                calculatorScreen.value += '**';
+            } else if (action === 'AC') {
+                calculatorScreen.value = '';
+            } else if (action === 'DEL') {
+                calculatorScreen.value = displayedNum.slice(0, -1);
+            } else if (action === '=') {
+                try {
+                    let expression = displayedNum.replace(/\^/g, '**');
+                    calculatorScreen.value = eval(expression);
+                } catch {
+                    calculatorScreen.value = 'Error';
+                }
+            }
+        });
+
 
         // --- UTILITY FUNCTIONS ---
         function debounce(func, delay) {
@@ -285,7 +472,6 @@
         function listenForRealtimeUpdates() {
           const dataRef = ref(database, 'appData');
           onValue(dataRef, (snapshot) => {
-            // If the change was made by the current user, do nothing.
             if (isSaving) {
                 return;
             }
@@ -312,7 +498,6 @@
                 } else {
                     renderInitialContainers(3);
                 }
-                // After initial load, start listening for live updates
                 listenForRealtimeUpdates();
             }).catch(err => {
                 console.error("Initial data load failed:", err);
@@ -342,14 +527,14 @@
       
               return {
                 title: dropdownTitle,
-                isOpen: sectionEl.hasAttribute('open'), // Save dropdown open state
+                isOpen: sectionEl.hasAttribute('open'),
                 jairaTable: getTableData(jairaTableEl),
                 kairaTable: getTableData(kairaTableEl),
               };
             });
             return {
                 title: containerTitle,
-                isOpen: zoneEl.hasAttribute('open'), // Save container open state
+                isOpen: zoneEl.hasAttribute('open'),
                 dropdowns
             };
           });
@@ -357,8 +542,6 @@
         }
       
         function renderState(state) {
-          // To prevent losing focus, we can try to be smarter about re-rendering
-          // For now, a full re-render is acceptable for remote changes
           const activeElement = document.activeElement;
           const activeId = activeElement.id;
 
