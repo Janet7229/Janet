@@ -150,8 +150,9 @@
         width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;
         border:1px solid #ff9800;border-radius:4px;font-weight:bold;background:#ffcc80;color:#333;
         transition:transform .15s;
+        font-size: 1.2rem;
+        line-height: 1;
       }
-      .zone[open] .zone-header .plus{transform:rotate(45deg);}
       .zone-content{display:none;padding:12px 14px 16px;background:#fffef8;}
       .zone[open] .zone-content{display:block;}
       .mini-btn,.add-btn,.graph-btn{
@@ -190,6 +191,8 @@
       .header .plus{
         width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;
         border:1px solid #ff9800;border-radius:4px;background:#ffcc80;font-weight:bold;
+        font-size: 1.1rem;
+        line-height: 1;
       }
       .content{padding:10px 14px 14px;display:none;}
       .section[open] .content{display:block;}
@@ -221,6 +224,39 @@
       .editing{
         outline:2px dashed #ff6f61;background:#fff5ee;
       }
+      /* Custom Modal Styles */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      .modal-content {
+        background: white;
+        padding: 20px 30px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      }
+      .modal-buttons {
+        margin-top: 20px;
+      }
+      .modal-buttons button {
+        padding: 10px 20px;
+        margin: 0 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      #confirm-yes-btn { background-color: #ef9a9a; color: white; }
+      #confirm-no-btn { background-color: #ccc; }
     </style>
 </head>
 <body>
@@ -281,6 +317,17 @@
     </div>
 
     <div id="zones"></div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirm-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <p id="confirm-message"></p>
+            <div class="modal-buttons">
+                <button id="confirm-yes-btn">Yes</button>
+                <button id="confirm-no-btn">No</button>
+            </div>
+        </div>
+    </div>
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -444,6 +491,35 @@
             }
         });
 
+        // --- CUSTOM CONFIRMATION MODAL ---
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmMessage = document.getElementById('confirm-message');
+        const confirmYesBtn = document.getElementById('confirm-yes-btn');
+        const confirmNoBtn = document.getElementById('confirm-no-btn');
+
+        function showConfirm(message) {
+            return new Promise(resolve => {
+                confirmMessage.textContent = message;
+                confirmModal.style.display = 'flex';
+
+                const yesListener = () => {
+                    confirmModal.style.display = 'none';
+                    confirmYesBtn.removeEventListener('click', yesListener);
+                    confirmNoBtn.removeEventListener('click', noListener);
+                    resolve(true);
+                };
+
+                const noListener = () => {
+                    confirmModal.style.display = 'none';
+                    confirmYesBtn.removeEventListener('click', yesListener);
+                    confirmNoBtn.removeEventListener('click', noListener);
+                    resolve(false);
+                };
+
+                confirmYesBtn.addEventListener('click', yesListener);
+                confirmNoBtn.addEventListener('click', noListener);
+            });
+        }
 
         // --- UTILITY FUNCTIONS ---
         function debounce(func, delay) {
@@ -584,9 +660,10 @@
           debouncedSave();
         });
       
-        removeContainerBtn.addEventListener('click', () => {
+        removeContainerBtn.addEventListener('click', async () => {
           if (zonesRoot.lastElementChild) {
-            if (confirm("Are you sure you want to remove the last container?")) {
+            const confirmed = await showConfirm("Are you sure you want to remove the last container?");
+            if (confirmed) {
               zonesRoot.removeChild(zonesRoot.lastElementChild);
               window.containerCount = Math.max(0, (window.containerCount || 0) - 1);
               debouncedSave();
@@ -609,7 +686,7 @@
           header.className = 'zone-header';
           const plus = document.createElement('span');
           plus.className = 'plus';
-          plus.textContent = '+';
+          plus.textContent = isOpen ? '-' : '+';
           const title = document.createElement('span');
           title.textContent = titleText;
           makeCaptionEditable(title);
@@ -644,6 +721,7 @@
           header.addEventListener('click', (e) => {
             if (e.target.isContentEditable) return;
             zone.toggleAttribute('open');
+            plus.textContent = zone.hasAttribute('open') ? '-' : '+';
             debouncedSave(); // Save state on toggle
           });
       
@@ -652,7 +730,7 @@
           return zone;
         }
       
-        function addOneDropdown(containerEl, data = null, cIndex, dIndex) {
+        async function addOneDropdown(containerEl, data = null, cIndex, dIndex) {
           const body = containerEl.querySelector('.zone-body');
           const idx = body.children.length + 1;
           const section = createSection(data ? data.title : `Dropdown ${idx}`, data, cIndex, dIndex);
@@ -660,10 +738,11 @@
           if (!data) debouncedSave();
         }
       
-        function removeOneDropdown(containerEl) {
+        async function removeOneDropdown(containerEl) {
           const body = containerEl.querySelector('.zone-body');
           if (!body.lastElementChild) return;
-          if (confirm("Are you sure you want to remove the last dropdown?")) {
+          const confirmed = await showConfirm("Are you sure you want to remove the last dropdown?");
+          if (confirmed) {
             body.removeChild(body.lastElementChild);
             debouncedSave();
           }
@@ -682,7 +761,7 @@
 
           const plus = document.createElement('span');
           plus.className = 'plus';
-          plus.textContent = '+';
+          plus.textContent = (data && data.isOpen) ? '-' : '+';
           const title = document.createElement('span');
           title.textContent = caption;
           makeCaptionEditable(title);
@@ -719,6 +798,7 @@
             if (e.target.isContentEditable) return;
             section.toggleAttribute('open');
             header.setAttribute('aria-expanded', section.hasAttribute('open'));
+            plus.textContent = section.hasAttribute('open') ? '-' : '+';
             debouncedSave(); // Save state on toggle
           });
           section.appendChild(header);
@@ -767,15 +847,24 @@
           const delColBtn = document.createElement('button');
           delColBtn.className = 'mini-btn del-col';
           delColBtn.textContent = '- Column';
-          delColBtn.addEventListener('click', () => {
-            if (confirm("Delete last column?")) { removeColumn(table); createOrRefreshDateRow(table); debouncedSave(); }
+          delColBtn.addEventListener('click', async () => {
+            const confirmed = await showConfirm("Delete last column?");
+            if (confirmed) {
+                removeColumn(table); 
+                createOrRefreshDateRow(table); 
+                debouncedSave();
+            }
           });
       
           const delRowBtn = document.createElement('button');
           delRowBtn.className = 'mini-btn del-row';
           delRowBtn.textContent = '- Row';
-          delRowBtn.addEventListener('click', () => {
-            if (confirm("Delete last row?")) { removeRow(table); debouncedSave(); }
+          delRowBtn.addEventListener('click', async () => {
+            const confirmed = await showConfirm("Delete last row?");
+            if (confirmed) {
+                removeRow(table); 
+                debouncedSave();
+            }
           });
       
           const graphBtn = document.createElement('button');
@@ -924,6 +1013,8 @@
           if (!validCols.length) return;
   
           const datasets = [];
+          const allRowData = [];
+
           normalRows.forEach((row, rIdx) => {
             const dataPoints = validCols.map(c => {
               const cell = row.cells[c];
@@ -931,6 +1022,7 @@
               const v = parseFloat(cell.textContent);
               return isNaN(v) ? null : v;
             });
+            allRowData.push(dataPoints);
   
             let firstValIndex = dataPoints.findIndex(p => p !== null);
             let lastValIndex = dataPoints.map(p => p !== null).lastIndexOf(true);
@@ -941,10 +1033,37 @@
             
             datasets.push({
               label: `Row ${rIdx + 1}`, data: finalData,
-              borderColor: `hsl(${(rIdx * 60) % 360}, 70%, 50%)`,
-              backgroundColor: `hsla(${(rIdx * 60) % 360}, 70%, 50%, .15)`,
+              borderColor: `hsla(${(rIdx * 60) % 360}, 70%, 50%, 0.4)`, // Lighter color
+              backgroundColor: `hsla(${(rIdx * 60) % 360}, 70%, 50%, 0.1)`,
+              borderWidth: 1, // Thinner line
               fill: false, spanGaps: false, tension: 0.2,
             });
+          });
+
+          // Calculate and add average line
+          const averageData = [];
+          for (let i = 0; i < labels.length; i++) {
+              let sum = 0;
+              let count = 0;
+              allRowData.forEach(rowData => {
+                  if (rowData[i] !== null) {
+                      sum += rowData[i];
+                      count++;
+                  }
+              });
+              averageData.push(count > 0 ? sum / count : null);
+          }
+
+          datasets.push({
+              label: 'Average',
+              data: averageData,
+              borderColor: 'rgba(54, 162, 235, 1)', // Dark Blue
+              backgroundColor: 'rgba(54, 162, 235, 0.2)',
+              borderWidth: 3, // Thicker line
+              fill: false,
+              tension: 0.2,
+              pointRadius: 4,
+              pointHoverRadius: 6
           });
   
           if (canvas._chart) canvas._chart.destroy();
