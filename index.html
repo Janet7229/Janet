@@ -221,8 +221,14 @@
         margin-top:8px;padding:8px;background:#fff;border:2px dashed #b39ddb;border-radius:8px;
         display:none;
       }
-      .editing{
-        outline:2px dashed #ff6f61;background:#fff5ee;
+      /* MODIFIED: Different editing styles for container vs dropdown titles */
+      .editing-container {
+        outline: 2px dashed #ff6f61;
+        background: #fff5ee; /* Original orange-tinted background */
+      }
+      .editing-dropdown {
+        outline: 2px dashed #ff6f61;
+        background: #eef2ff; /* A light blue/purple background */
       }
       /* Custom Modal Styles */
       .modal-overlay {
@@ -318,7 +324,6 @@
 
     <div id="zones"></div>
 
-    <!-- Custom Confirmation Modal -->
     <div id="confirm-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <p id="confirm-message"></p>
@@ -329,10 +334,8 @@
         </div>
     </div>
     
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Main App Script with Modern Firebase SDK -->
     <script type="module">
       // --- FIREBASE V9 MODULAR SDK IMPORTS ---
       import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
@@ -609,9 +612,9 @@
               };
             });
             return {
-                title: containerTitle,
-                isOpen: zoneEl.hasAttribute('open'),
-                dropdowns
+              title: containerTitle,
+              isOpen: zoneEl.hasAttribute('open'),
+              dropdowns
             };
           });
           return { containers };
@@ -624,12 +627,12 @@
           zonesRoot.innerHTML = '';
           if (state && state.containers && state.containers.length > 0) {
               state.containers.forEach((containerData, cIndex) => {
-                const zone = createZone(cIndex + 1, containerData.title, containerData.isOpen);
-                zonesRoot.appendChild(zone);
-                const content = zone.querySelector('.zone-content');
-                containerData.dropdowns?.forEach((dropdownData, dIndex) => {
-                  addOneDropdown(content, dropdownData, cIndex, dIndex);
-                });
+                  const zone = createZone(cIndex + 1, containerData.title, containerData.isOpen);
+                  zonesRoot.appendChild(zone);
+                  const content = zone.querySelector('.zone-content');
+                  containerData.dropdowns?.forEach((dropdownData, dIndex) => {
+                    addOneDropdown(content, dropdownData, cIndex, dIndex);
+                  });
               });
               window.containerCount = state.containers.length;
           } else {
@@ -664,9 +667,9 @@
           if (zonesRoot.lastElementChild) {
             const confirmed = await showConfirm("Are you sure you want to remove the last container?");
             if (confirmed) {
-              zonesRoot.removeChild(zonesRoot.lastElementChild);
-              window.containerCount = Math.max(0, (window.containerCount || 0) - 1);
-              debouncedSave();
+                zonesRoot.removeChild(zonesRoot.lastElementChild);
+                window.containerCount = Math.max(0, (window.containerCount || 0) - 1);
+                debouncedSave();
             }
           }
         });
@@ -689,7 +692,7 @@
           plus.textContent = isOpen ? '-' : '+';
           const title = document.createElement('span');
           title.textContent = titleText;
-          makeCaptionEditable(title);
+          makeCaptionEditable(title, 'container'); // MODIFIED
       
           header.appendChild(plus);
           header.appendChild(title);
@@ -764,7 +767,7 @@
           plus.textContent = (data && data.isOpen) ? '-' : '+';
           const title = document.createElement('span');
           title.textContent = caption;
-          makeCaptionEditable(title);
+          makeCaptionEditable(title, 'dropdown'); // MODIFIED
           header.appendChild(plus);
           header.appendChild(title);
       
@@ -924,7 +927,7 @@
           while (dateRow.cells.length > cols) {
               dateRow.deleteCell(-1);
           }
-  
+
           if(dateData && dateData.length > 0) {
               [...dateRow.cells].forEach((td, i) => {
                   td.textContent = dateData[i] || '';
@@ -994,9 +997,9 @@
               }
               if(lastNonEmptyCol !== -1) break;
           }
-  
+
           if (lastNonEmptyCol === -1) return;
-  
+
           const validCols = [];
           const labels = [];
           for (let c = 0; c <= lastNonEmptyCol; c++) {
@@ -1009,9 +1012,9 @@
                 labels.push(`Col ${c + 1}`);
             }
           }
-  
+
           if (!validCols.length) return;
-  
+
           const datasets = [];
           const allRowData = [];
 
@@ -1023,12 +1026,12 @@
               return isNaN(v) ? null : v;
             });
             allRowData.push(dataPoints);
-  
+
             let firstValIndex = dataPoints.findIndex(p => p !== null);
             let lastValIndex = dataPoints.map(p => p !== null).lastIndexOf(true);
-  
+
             if(firstValIndex === -1) return;
-  
+
             const finalData = dataPoints.map((p, i) => (i >= firstValIndex && i <= lastValIndex) ? p : null);
             
             datasets.push({
@@ -1065,7 +1068,7 @@
               pointRadius: 4,
               pointHoverRadius: 6
           });
-  
+
           if (canvas._chart) canvas._chart.destroy();
           canvas._chart = new Chart(canvas.getContext('2d'), {
             type: 'line', data: { labels, datasets },
@@ -1073,40 +1076,76 @@
           });
         }
       
-        function makeCaptionEditable(spanEl) {
-          spanEl.style.cursor = 'text';
-          spanEl.addEventListener('dblclick', (e) => { e.stopPropagation(); enableEdit(spanEl); });
-          spanEl.setAttribute('tabindex', '0');
-          spanEl.addEventListener('keydown', (e) => { if (e.key === 'F2') { e.preventDefault(); enableEdit(spanEl); } });
-      
-          function enableEdit(el) {
-            el.contentEditable = 'true';
-            el.classList.add('editing');
-            el.focus();
-            window.getSelection().selectAllChildren(el);
-      
-            function commit() {
-              el.contentEditable = 'false';
-              el.classList.remove('editing');
-              cleanup();
-              debouncedSave();
+        // MODIFIED: Replaced dblclick with hold-press and differentiated edit styles
+        function makeCaptionEditable(spanEl, type) { // type = 'container' or 'dropdown'
+            let pressTimer = null;
+            const holdDuration = 600; // ms
+
+            const startPress = (e) => {
+                if (spanEl.isContentEditable) return;
+                e.stopPropagation(); // Prevent header click from firing
+                pressTimer = setTimeout(() => {
+                    enableEdit(spanEl, type);
+                }, holdDuration);
+            };
+
+            const cancelPress = () => {
+                clearTimeout(pressTimer);
+            };
+
+            spanEl.style.cursor = 'text';
+            spanEl.setAttribute('tabindex', '0');
+
+            // Mouse events
+            spanEl.addEventListener('mousedown', startPress);
+            spanEl.addEventListener('mouseup', cancelPress);
+            spanEl.addEventListener('mouseleave', cancelPress);
+
+            // Touch events for mobile
+            spanEl.addEventListener('touchstart', startPress);
+            spanEl.addEventListener('touchend', cancelPress);
+            spanEl.addEventListener('touchmove', cancelPress);
+
+            // Keep F2 for accessibility
+            spanEl.addEventListener('keydown', (e) => {
+                if (e.key === 'F2' && !spanEl.isContentEditable) {
+                    e.preventDefault();
+                    enableEdit(spanEl, type);
+                }
+            });
+
+            function enableEdit(el, editType) {
+                clearTimeout(pressTimer);
+
+                const editClass = editType === 'container' ? 'editing-container' : 'editing-dropdown';
+                
+                el.contentEditable = 'true';
+                el.classList.add(editClass);
+                el.focus();
+                window.getSelection().selectAllChildren(el);
+
+                function commit() {
+                    el.contentEditable = 'false';
+                    el.classList.remove(editClass);
+                    cleanup();
+                    debouncedSave();
+                }
+                function onKey(e) { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); commit(); } }
+                function onBlur() { commit(); }
+                function cleanup() {
+                    el.removeEventListener('keydown', onKey);
+                    el.removeEventListener('blur', onBlur);
+                }
+                el.addEventListener('keydown', onKey);
+                el.addEventListener('blur', onBlur);
             }
-            function onKey(e) { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); commit(); } }
-            function onBlur() { commit(); }
-            function cleanup() {
-              el.removeEventListener('keydown', onKey);
-              el.removeEventListener('blur', onBlur);
-            }
-            el.addEventListener('keydown', onKey);
-            el.addEventListener('blur', onBlur);
-          }
         }
       
         // --- INITIALIZE APP ---
         initialLoad();
       
       });
-    
+      
     </script>
 
 </body>
