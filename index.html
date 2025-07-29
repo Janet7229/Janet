@@ -165,6 +165,7 @@
       .mini-btn.del-col{background:#f48fb1;} /* - Column */
       .mini-btn.del-row{background:#ffcc80;} /* - Row */
       .graph-btn{background:#b39ddb;width:auto;height:auto;padding:6px 10px;font-size:13px;}
+      .graph-btn.note-btn { background: #64b5f6; } /* Light blue for Note button */
       .mini-btn:hover,.add-btn:hover,.graph-btn:hover{transform:scale(1.05);}
       
       .dropdown-controls{
@@ -221,10 +222,26 @@
         margin-top:8px;padding:8px;background:#fff;border:2px dashed #b39ddb;border-radius:8px;
         display:none;
       }
+      /* NEW: Note area styles */
+      .note-wrap {
+          display: none; /* Hidden by default */
+          margin-top: 8px;
+      }
+      .note-area {
+          width: 100%;
+          min-height: 80px;
+          box-sizing: border-box;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          padding: 8px;
+          font-family: inherit;
+          font-size: 14px;
+          resize: vertical;
+      }
       /* MODIFIED: Different editing styles for container vs dropdown titles */
       .editing-container {
         outline: 2px dashed #ff6f61;
-        background: #fff5ee; /* Original orange-tinted background */
+        background: #fbe0bc; /* Darker orange-tinted background */
       }
       .editing-dropdown {
         outline: 2px dashed #ff6f61;
@@ -595,13 +612,19 @@
               const kairaTableEl = sectionEl.querySelector('.table-bottom');
       
               const getTableData = (tableEl) => {
-                if (!tableEl) return { dataRows: [], dateRow: [] };
+                if (!tableEl) return { dataRows: [], dateRow: [], noteContent: '', isNoteVisible: false };
                 const dataRows = [...tableEl.querySelectorAll('tr:not(.date-row)')].map(tr => 
                   [...tr.cells].map(td => td.textContent)
                 );
                 const dateRowCells = tableEl.querySelector('.date-row')?.cells || [];
                 const dateRow = [...dateRowCells].map(td => td.textContent);
-                return { dataRows, dateRow };
+                
+                // NEW: Scrape note data
+                const noteArea = tableEl.closest('.content').querySelector('.note-area');
+                const noteContent = noteArea ? noteArea.value : '';
+                const isNoteVisible = noteArea ? noteArea.parentElement.style.display === 'block' : false;
+
+                return { dataRows, dateRow, noteContent, isNoteVisible };
               };
       
               return {
@@ -692,7 +715,7 @@
           plus.textContent = isOpen ? '-' : '+';
           const title = document.createElement('span');
           title.textContent = titleText;
-          makeCaptionEditable(title, 'container'); // MODIFIED
+          makeCaptionEditable(title, 'container');
       
           header.appendChild(plus);
           header.appendChild(title);
@@ -767,15 +790,15 @@
           plus.textContent = (data && data.isOpen) ? '-' : '+';
           const title = document.createElement('span');
           title.textContent = caption;
-          makeCaptionEditable(title, 'dropdown'); // MODIFIED
+          makeCaptionEditable(title, 'dropdown');
           header.appendChild(plus);
           header.appendChild(title);
       
           const content = document.createElement('div');
           content.className = 'content';
       
-          const jairaData = data && data.jairaTable ? data.jairaTable : { dataRows: [['']], dateRow: [] };
-          const kairaData = data && data.kairaTable ? data.kairaTable : { dataRows: [['']], dateRow: [] };
+          const jairaData = data?.jairaTable || { dataRows: [['']], dateRow: [], noteContent: '' };
+          const kairaData = data?.kairaTable || { dataRows: [['']], dateRow: [], noteContent: '' };
           
           const topTitle = document.createElement('div');
           topTitle.className = 'table-title';
@@ -787,15 +810,40 @@
           bottomTitle.textContent = 'Kaira';
           const bottom = buildEditableTable(kairaData, 'table-bottom');
       
+          // NEW: Add note areas and populate them with saved data
+          const topNoteWrap = document.createElement('div');
+          topNoteWrap.className = 'note-wrap';
+          const topNoteArea = document.createElement('textarea');
+          topNoteArea.className = 'note-area';
+          topNoteArea.placeholder = 'Type Jaira notes here...';
+          topNoteArea.value = jairaData.noteContent || '';
+          topNoteWrap.style.display = jairaData.isNoteVisible ? 'block' : 'none';
+          topNoteArea.addEventListener('keyup', debouncedSave);
+          topNoteArea.addEventListener('blur', debouncedSave);
+          topNoteWrap.appendChild(topNoteArea);
+          
+          const bottomNoteWrap = document.createElement('div');
+          bottomNoteWrap.className = 'note-wrap';
+          const bottomNoteArea = document.createElement('textarea');
+          bottomNoteArea.className = 'note-area';
+          bottomNoteArea.placeholder = 'Type Kaira notes here...';
+          bottomNoteArea.value = kairaData.noteContent || '';
+          bottomNoteWrap.style.display = kairaData.isNoteVisible ? 'block' : 'none';
+          bottomNoteArea.addEventListener('keyup', debouncedSave);
+          bottomNoteArea.addEventListener('blur', debouncedSave);
+          bottomNoteWrap.appendChild(bottomNoteArea);
+
           content.appendChild(topTitle);
           content.appendChild(top.toolbar);
           content.appendChild(top.container);
           content.appendChild(top.graphWrap);
+          content.appendChild(topNoteWrap);
           content.appendChild(document.createElement('hr'));
           content.appendChild(bottomTitle);
           content.appendChild(bottom.toolbar);
           content.appendChild(bottom.container);
           content.appendChild(bottom.graphWrap);
+          content.appendChild(bottomNoteWrap);
       
           header.addEventListener('click', (e) => {
             if (e.target.isContentEditable) return;
@@ -824,7 +872,6 @@
               const td = document.createElement('td');
               td.contentEditable = "true";
               td.textContent = cellData;
-              // SAVE ON BLUR AND KEYUP
               td.addEventListener('blur', debouncedSave);
               td.addEventListener('keyup', debouncedSave);
               tr.appendChild(td);
@@ -872,17 +919,30 @@
       
           const graphBtn = document.createElement('button');
           graphBtn.className = 'graph-btn';
-          graphBtn.textContent = '📈';
+          graphBtn.textContent = '📈 Graph';
           const graphWrap = document.createElement('div');
           graphWrap.className = 'graph-wrap';
           const canvas = document.createElement('canvas');
           graphWrap.appendChild(canvas);
+
+          // NEW: Create and configure Note button
+          const noteBtn = document.createElement('button');
+          noteBtn.className = 'graph-btn note-btn';
+          noteBtn.textContent = '📝 Note';
+          noteBtn.addEventListener('click', () => {
+              const noteWrap = table.closest('.content').querySelector('.note-wrap');
+              if (noteWrap) {
+                  noteWrap.style.display = noteWrap.style.display === 'block' ? 'none' : 'block';
+                  debouncedSave(); // Save visibility state change
+              }
+          });
       
           toolbar.appendChild(addColBtn);
           toolbar.appendChild(addRowBtn);
           toolbar.appendChild(delColBtn);
           toolbar.appendChild(delRowBtn);
           toolbar.appendChild(graphBtn);
+          toolbar.appendChild(noteBtn); // Add note button to toolbar
           graphBtn.addEventListener('click', () => toggleGraph(table, canvas, graphWrap));
           container.appendChild(table);
           updateTableScroll(table);
@@ -1076,7 +1136,6 @@
           });
         }
       
-        // MODIFIED: Replaced dblclick with hold-press and differentiated edit styles
         function makeCaptionEditable(spanEl, type) { // type = 'container' or 'dropdown'
             let pressTimer = null;
             const holdDuration = 600; // ms
