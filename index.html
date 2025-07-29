@@ -13,14 +13,13 @@
       h1{
         text-align:center;font-size:2rem;margin-bottom:1rem;color:#ff6f61;
       }
-      /* Top Right Controls Container */
-      .top-right-controls {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 10;
+      /* MODIFIED: Top Tools Wrapper */
+      .tools-wrapper {
         display: flex;
-        gap: 10px;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
       }
       .tool-container {
         position: relative;
@@ -41,31 +40,35 @@
         display: none; /* Hidden by default */
         position: absolute;
         top: 40px; /* Position below the button */
-        right: 0;
+        left: 50%;
+        transform: translateX(-50%);
         background: #f0f0f0;
-        padding: 10px;
+        padding: 15px; /* Increased padding */
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         text-align: center;
+        z-index: 10;
       }
+      /* MODIFIED: Bigger time display */
       #time-display{
-        font-size: 1.5rem;
+        font-size: 2.5rem;
         font-weight: bold;
         color: #333;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
         display: block;
-        min-width: 120px; /* Give it space */
+        min-width: 180px; /* Give it space */
         font-family: 'Courier New', Courier, monospace;
       }
+      /* MODIFIED: Bigger buttons */
       .stopwatch-btn{
-        padding: 4px 8px;
-        font-size: 12px;
+        padding: 8px 12px;
+        font-size: 14px;
         cursor: pointer;
         border: none;
-        border-radius: 4px;
+        border-radius: 6px;
         color: #fff;
-        margin: 0 2px;
-        width: 60px; /* Give buttons a consistent width */
+        margin: 0 5px;
+        width: 70px; /* Give buttons a consistent width */
       }
       .start-pause-btn.running {
         background: #ffcc80; /* Pause color */
@@ -80,13 +83,15 @@
         display: none; /* Hidden by default */
         position: absolute;
         top: 40px; /* Position below the button */
-        right: 0;
+        left: 50%;
+        transform: translateX(-50%);
         width: 300px;
         border: 2px solid #333;
         border-radius: 10px;
         background: #d3d3d3;
         padding: 15px;
         box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        z-index: 10;
       }
       .calculator-screen {
         width: 100%;
@@ -283,7 +288,8 @@
     </style>
 </head>
 <body>
-    <div class="top-right-controls">
+    <!-- MOVED: Tools are now at the top of the body -->
+    <div class="tools-wrapper">
         <div class="tool-container">
             <button class="tool-toggle-btn stopwatch-toggle-btn">Stopwatch</button>
             <div class="stopwatch">
