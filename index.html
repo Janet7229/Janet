@@ -143,8 +143,8 @@
         box-shadow:0 2px 6px rgba(0,0,0,.1);background:#fff4e6;
       }
       .zone-header{
-        display:flex;align-items:center;gap:8px;padding:12px 14px;background:#ffe0b2;
-        cursor:pointer;font-weight:bold;font-size:1.1rem;
+        display:flex;align-items:center;gap:8px;padding:12px 14px;background:#ffb347;
+        color: #c62828;cursor:pointer;font-weight:bold;font-size:1.1rem;
       }
       .zone .plus{
         width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;
@@ -392,7 +392,7 @@
         const zonesRoot = document.getElementById('zones');
         const addContainerBtn = document.querySelector('.control-btn.add');
         const removeContainerBtn = document.querySelector('.control-btn.remove');
-      
+    
         // --- STOPWATCH LOGIC ---
         const stopwatch = document.querySelector('.stopwatch');
         const stopwatchToggleBtn = document.querySelector('.stopwatch-toggle-btn');
@@ -550,7 +550,7 @@
           };
         }
         const debouncedSave = debounce(saveStateToFirebase, 800);
-      
+    
         // --- FIREBASE DATA HANDLING (V9 SYNTAX) ---
         function saveStateToFirebase() {
           isSaving = true; // Set flag before saving
@@ -564,7 +564,7 @@
                 setTimeout(() => { isSaving = false; }, 100);
             });
         }
-      
+    
         function listenForRealtimeUpdates() {
           const dataRef = ref(database, 'appData');
           onValue(dataRef, (snapshot) => {
@@ -601,7 +601,7 @@
                 listenForRealtimeUpdates();
             });
         }
-      
+    
         // --- STATE SCRAPING & RENDERING ---
         function getCurrentStateFromDOM() {
           const containers = [...zonesRoot.querySelectorAll('.zone')].map(zoneEl => {
@@ -610,7 +610,7 @@
               const dropdownTitle = sectionEl.querySelector('.header > span:last-child').textContent;
               const jairaTableEl = sectionEl.querySelector('.table-top');
               const kairaTableEl = sectionEl.querySelector('.table-bottom');
-      
+    
               const getTableData = (tableEl) => {
                 if (!tableEl) return { dataRows: [], dateRow: [], noteContent: '', isNoteVisible: false };
                 const dataRows = [...tableEl.querySelectorAll('tr:not(.date-row)')].map(tr => 
@@ -626,7 +626,7 @@
 
                 return { dataRows, dateRow, noteContent, isNoteVisible };
               };
-      
+    
               return {
                 title: dropdownTitle,
                 isOpen: sectionEl.hasAttribute('open'),
@@ -642,7 +642,7 @@
           });
           return { containers };
         }
-      
+    
         function renderState(state) {
           const activeElement = document.activeElement;
           const activeId = activeElement.id;
@@ -678,14 +678,14 @@
           }
           saveStateToFirebase();
         }
-      
+    
         // --- EVENT LISTENERS ---
         addContainerBtn.addEventListener('click', () => {
           window.containerCount = (window.containerCount || 0) + 1;
           zonesRoot.appendChild(createZone(window.containerCount));
           debouncedSave();
         });
-      
+    
         removeContainerBtn.addEventListener('click', async () => {
           if (zonesRoot.lastElementChild) {
             const confirmed = await showConfirm("Are you sure you want to remove the last container?");
@@ -696,7 +696,7 @@
             }
           }
         });
-      
+    
         // --- CREATION FUNCTIONS ---
         function createZone(index, titleText, isOpen = false) {
           if (!titleText) {
@@ -707,7 +707,7 @@
           if (isOpen) {
               zone.setAttribute('open', '');
           }
-      
+    
           const header = document.createElement('div');
           header.className = 'zone-header';
           const plus = document.createElement('span');
@@ -716,20 +716,20 @@
           const title = document.createElement('span');
           title.textContent = titleText;
           makeCaptionEditable(title, 'container');
-      
+    
           header.appendChild(plus);
           header.appendChild(title);
-      
+    
           const content = document.createElement('div');
           content.className = 'zone-content';
           const ddControls = document.createElement('div');
           ddControls.className = 'dropdown-controls';
-      
+    
           const addDropdownBtn = document.createElement('button');
           addDropdownBtn.className = 'add-btn';
           addDropdownBtn.textContent = '+';
           addDropdownBtn.addEventListener('click', () => addOneDropdown(content, null, index - 1, (zone.querySelectorAll('.section').length)));
-      
+    
           const removeDropdownBtn = document.createElement('button');
           removeDropdownBtn.className = 'add-btn';
           removeDropdownBtn.style.background = '#ef9a9a';
@@ -738,24 +738,24 @@
           
           ddControls.appendChild(addDropdownBtn);
           ddControls.appendChild(removeDropdownBtn);
-      
+    
           const body = document.createElement('div');
           body.className = 'zone-body';
           content.appendChild(ddControls);
           content.appendChild(body);
-      
+    
           header.addEventListener('click', (e) => {
             if (e.target.isContentEditable) return;
             zone.toggleAttribute('open');
             plus.textContent = zone.hasAttribute('open') ? '-' : '+';
             debouncedSave(); // Save state on toggle
           });
-      
+    
           zone.appendChild(header);
           zone.appendChild(content);
           return zone;
         }
-      
+    
         async function addOneDropdown(containerEl, data = null, cIndex, dIndex) {
           const body = containerEl.querySelector('.zone-body');
           const idx = body.children.length + 1;
@@ -763,17 +763,17 @@
           body.appendChild(section);
           if (!data) debouncedSave();
         }
-      
+    
         async function removeOneDropdown(containerEl) {
           const body = containerEl.querySelector('.zone-body');
           if (!body.lastElementChild) return;
           const confirmed = await showConfirm("Are you sure you want to remove the last dropdown?");
           if (confirmed) {
-            body.removeChild(body.lastElementChild);
-            debouncedSave();
+              body.removeChild(body.lastElementChild);
+              debouncedSave();
           }
         }
-      
+    
         function createSection(caption, data = null, cIndex, dIndex) {
           const section = document.createElement('div');
           section.className = 'section';
@@ -793,10 +793,10 @@
           makeCaptionEditable(title, 'dropdown');
           header.appendChild(plus);
           header.appendChild(title);
-      
+    
           const content = document.createElement('div');
           content.className = 'content';
-      
+    
           const jairaData = data?.jairaTable || { dataRows: [['']], dateRow: [], noteContent: '' };
           const kairaData = data?.kairaTable || { dataRows: [['']], dateRow: [], noteContent: '' };
           
@@ -809,7 +809,7 @@
           bottomTitle.className = 'table-title';
           bottomTitle.textContent = 'Kaira';
           const bottom = buildEditableTable(kairaData, 'table-bottom');
-      
+    
           // NEW: Add note areas and populate them with saved data
           const topNoteWrap = document.createElement('div');
           topNoteWrap.className = 'note-wrap';
@@ -844,7 +844,7 @@
           content.appendChild(bottom.container);
           content.appendChild(bottom.graphWrap);
           content.appendChild(bottomNoteWrap);
-      
+    
           header.addEventListener('click', (e) => {
             if (e.target.isContentEditable) return;
             section.toggleAttribute('open');
@@ -856,7 +856,7 @@
           section.appendChild(content);
           return section;
         }
-      
+    
         function buildEditableTable(tableData, extraClass) {
           const container = document.createElement('div');
           container.className = 'table-container';
@@ -878,22 +878,22 @@
             });
             table.appendChild(tr);
           });
-      
+    
           createOrRefreshDateRow(table, tableData ? tableData.dateRow : []);
           
           const toolbar = document.createElement('div');
           toolbar.className = 'table-toolbar';
-      
+    
           const addColBtn = document.createElement('button');
           addColBtn.className = 'mini-btn add-col';
           addColBtn.textContent = '+ Column';
           addColBtn.addEventListener('click', () => { addColumn(table); createOrRefreshDateRow(table); debouncedSave(); });
-      
+    
           const addRowBtn = document.createElement('button');
           addRowBtn.className = 'mini-btn add-row';
           addRowBtn.textContent = '+ Row';
           addRowBtn.addEventListener('click', () => { addRow(table); debouncedSave(); });
-      
+    
           const delColBtn = document.createElement('button');
           delColBtn.className = 'mini-btn del-col';
           delColBtn.textContent = '- Column';
@@ -905,7 +905,7 @@
                 debouncedSave();
             }
           });
-      
+    
           const delRowBtn = document.createElement('button');
           delRowBtn.className = 'mini-btn del-row';
           delRowBtn.textContent = '- Row';
@@ -916,7 +916,7 @@
                 debouncedSave();
             }
           });
-      
+    
           const graphBtn = document.createElement('button');
           graphBtn.className = 'graph-btn';
           graphBtn.textContent = '📈 Graph';
@@ -936,7 +936,7 @@
                   debouncedSave(); // Save visibility state change
               }
           });
-      
+    
           toolbar.appendChild(addColBtn);
           toolbar.appendChild(addRowBtn);
           toolbar.appendChild(delColBtn);
@@ -952,7 +952,7 @@
         function getTBody(table){
           return table.tBodies && table.tBodies.length > 0 ? table.tBodies[0] : table;
         }
-      
+    
         function stampNow(e) {
           const d = new Date();
           const mm = String(d.getMonth() + 1).padStart(2,'0');
@@ -961,11 +961,11 @@
           e.target.textContent = `${mm}/${dd}/${yy}`;
           debouncedSave();
         }
-      
+    
         function getDateRow(table) {
           return table.querySelector('.date-row');
         }
-      
+    
         function getColumnCount(table) {
           const firstNormalRow = table.querySelector('tr:not(.date-row)');
           return firstNormalRow ? firstNormalRow.cells.length : (getDateRow(table) ? getDateRow(table).cells.length : 1);
@@ -994,11 +994,11 @@
               });
           }
         }
-      
+    
         function updateTableScroll(table) {
           table.classList.toggle('wide', getColumnCount(table) > 10);
         }
-      
+    
         function addColumn(table) {
           [...table.rows].forEach(tr => {
             const td = tr.insertCell(-1);
@@ -1013,13 +1013,13 @@
           });
           updateTableScroll(table);
         }
-      
+    
         function removeColumn(table) {
           if (getColumnCount(table) <= 1) return;
           [...table.rows].forEach(tr => tr.deleteCell(-1));
           updateTableScroll(table);
         }
-      
+    
         function addRow(table) {
           const cols = getColumnCount(table);
           const dateRow = getDateRow(table);
@@ -1031,13 +1031,13 @@
             td.addEventListener('keyup', debouncedSave);
           }
         }
-      
+    
         function removeRow(table) {
           const normalRows = [...table.querySelectorAll('tr:not(.date-row)')];
           if (normalRows.length <= 1) return;
           normalRows[normalRows.length - 1].remove();
         }
-      
+    
         function toggleGraph(table, canvas, graphWrap) {
           if (graphWrap.style.display === 'block') {
             graphWrap.style.display = 'none';
@@ -1135,7 +1135,7 @@
             options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
           });
         }
-      
+    
         function makeCaptionEditable(spanEl, type) { // type = 'container' or 'dropdown'
             let pressTimer = null;
             const holdDuration = 600; // ms
@@ -1199,10 +1199,10 @@
                 el.addEventListener('blur', onBlur);
             }
         }
-      
+    
         // --- INITIALIZE APP ---
         initialLoad();
-      
+    
       });
       
     </script>
