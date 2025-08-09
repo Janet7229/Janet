@@ -1,4 +1,16 @@
 <!DOCTYPE html>
+<h1>Live Distance</h1>
+<div id="dist">Loading...</div>
+
+<script>
+async function fetchDistance() {
+    let res = await fetch("distance.txt?cache=" + Math.random());
+    let txt = await res.text();
+    document.getElementById("dist").innerText = txt + " cm";
+}
+setInterval(fetchDistance, 2000);
+fetchDistance();
+</script>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -1215,3 +1227,4 @@
 
 </body>
 </html>
+
