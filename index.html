@@ -1,12 +1,3 @@
-<div id="dist"></div>
-<script>
-async function fetchDistance() {
-  let res = await fetch("distance.txt?cache=" + Math.random());
-  document.getElementById('dist').textContent = (await res.text()) + " cm";
-}
-setInterval(fetchDistance, 2000);
-fetchDistance();
-</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1224,3 +1215,4 @@ fetchDistance();
 
 </body>
 </html>
+
