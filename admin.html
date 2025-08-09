@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Awesome Project</title>
+</head>
+<body>
+
+    <h1>Live Sensor Reading</h1>
+    <p>Current distance from sensor:</p>
+
+    <div id="dist">Loading...</div>
+    <script>
+    async function fetchDistance() {
+      let res = await fetch("distance.txt?cache=" + Math.random());
+      document.getElementById('dist').textContent = (await res.text()) + " cm";
+    }
+    setInterval(fetchDistance, 2000);
+    fetchDistance();
+    </script>
+    <p>This value updates every 2 seconds.</p>
+
+</body>
+</html>
