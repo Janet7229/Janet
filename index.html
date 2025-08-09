@@ -1,16 +1,13 @@
-<!DOCTYPE html>
-<h1>Live Distance</h1>
-<div id="dist">Loading...</div>
-
+<div id="dist"></div>
 <script>
 async function fetchDistance() {
-    let res = await fetch("distance.txt?cache=" + Math.random());
-    let txt = await res.text();
-    document.getElementById("dist").innerText = txt + " cm";
+  let res = await fetch("distance.txt?cache=" + Math.random());
+  document.getElementById('dist').textContent = (await res.text()) + " cm";
 }
 setInterval(fetchDistance, 2000);
 fetchDistance();
 </script>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -1227,4 +1224,3 @@ fetchDistance();
 
 </body>
 </html>
-
